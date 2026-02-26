@@ -26,9 +26,6 @@ logs/
 .env
 application-local.yml
 
-# QueryDSL 생성 파일
-src/main/generated/
-
 # OS
 .DS_Store
 Thumbs.db
