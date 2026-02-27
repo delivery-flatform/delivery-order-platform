@@ -7,4 +7,6 @@ import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByCustomerUsernameAndDeletedAtIsNull(String customerUsername);
+
+    List<Order> findByStoreId(UUID storeId);
 }

@@ -2,6 +2,8 @@ package com.delivery.project.order.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -11,6 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@SQLRestriction("delete_at Is NULL")
 public class Order {
 
     @Id
