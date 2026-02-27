@@ -1,9 +1,12 @@
 package com.delivery.project.category.controller;
 
 import com.delivery.project.category.dto.CategoryRequestDto;
+import com.delivery.project.category.dto.CategoryUpdateDto;
 import com.delivery.project.category.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/categories")
@@ -21,5 +24,10 @@ public class CategoryController {
     }
 
     // TODO: PUT    /api/v1/categories/{id}  - 카테고리 수정
+    @PutMapping("/{id}")
+    public void updateCategory(@PathVariable UUID id, @RequestBody CategoryUpdateDto requestDto) {
+        categoryService.updateCategory(id, requestDto);
+    }
+
     // TODO: DELETE /api/v1/categories/{id}  - 카테고리 삭제
 }

@@ -1,5 +1,6 @@
 package com.delivery.project.category.entity;
 
+import com.delivery.project.category.dto.CategoryUpdateDto;
 import com.delivery.project.store.entity.StoreCategory;
 import jakarta.persistence.*;
 import lombok.*;
@@ -46,4 +47,10 @@ public class Category {
 
     @OneToMany(mappedBy = "category")
     private List<StoreCategory> storeCategoryList = new ArrayList<>();
+
+    public void updateCategory(CategoryUpdateDto requestDto) {
+        this.name = requestDto.getName();
+        this.isActive = requestDto.getIsActive();
+        this.updatedAt = LocalDateTime.now();
+    }
 }
