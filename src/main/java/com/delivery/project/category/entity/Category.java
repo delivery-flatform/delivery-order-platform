@@ -1,8 +1,11 @@
 package com.delivery.project.category.entity;
 
+import com.delivery.project.store.entity.StoreCategory;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -40,4 +43,7 @@ public class Category {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
+    @OneToMany(mappedBy = "category")
+    private List<StoreCategory> storeCategoryList = new ArrayList<>();
 }
