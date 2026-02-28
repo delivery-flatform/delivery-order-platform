@@ -20,6 +20,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
 
+    // TODO: 주문 전체 조회
     public Page<OrderResponseDto> selectOrders(String userId, String storeId, Pageable pageable) {
         Page<Order> orderPage;
 
@@ -33,6 +34,14 @@ public class OrderService {
     }
 
     // TODO: 주문 단건 조회
+    public OrderResponseDto selectOrder(UUID orderId) {
+
+        Order order = orderRepository.findByIdAndDeletedAtIsNull(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않거나 삭제되었습니다. ID: " + orderId));
+
+        return OrderResponseDto.from(order);
+    }
+
     // TODO: 주문 생성 (이때는 @Transactional을 붙여야 함)
     // TODO: 주문 취소 (5분 이내 체크 로직 필요)
     // TODO: 주문 상태 변경 (OWNER or MANAGER+)

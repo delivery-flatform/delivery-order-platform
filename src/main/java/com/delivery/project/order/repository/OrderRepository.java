@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
@@ -26,4 +27,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             "where o.storeId = :storeId",
             countQuery = "select count(o) from Order o where o.storeId = :storeId")
     Page<Order> findByStoreId(@Param("storeId") UUID storeId, Pageable pageable);
+
+    // 주문 ID로 조회
+    Optional<Order> findByIdAndDeletedAtIsNull(UUID orderId);
 }
