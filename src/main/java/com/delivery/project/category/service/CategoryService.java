@@ -1,6 +1,7 @@
 package com.delivery.project.category.service;
 
 import com.delivery.project.category.dto.CategoryRequestDto;
+import com.delivery.project.category.dto.CategoryResponseDto;
 import com.delivery.project.category.dto.CategoryUpdateDto;
 import com.delivery.project.category.entity.Category;
 import com.delivery.project.category.repository.CategoryRepository;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -23,7 +25,15 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     // TODO: 카테고리 목록 조회
-    // TODO: 카테고리 단건 조회
+
+    // TODO: 카테고리 단건 조회 (MANAGER+)
+    @Transactional(readOnly = true)
+    public CategoryResponseDto selectCategory(UUID id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("NOT FOUND"));
+
+        return CategoryResponseDto.from(category);
+    }
 
     // TODO: 카테고리 등록 (MANAGER+)
     @Transactional
@@ -39,6 +49,7 @@ public class CategoryService {
         categoryRepository.save(category);
     }
 
+    // TODO: 카테고리 수정 (MANAGER+)
     @Transactional
     public void updateCategory(UUID id, CategoryUpdateDto requestDto) {
         Category category = categoryRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
@@ -47,7 +58,7 @@ public class CategoryService {
         category.updateCategory(requestDto);
     }
 
-    // TODO: 카테고리 수정 (MANAGER+)
+
 
     // TODO: 카테고리 삭제 Soft Delete (MANAGER+)
 }

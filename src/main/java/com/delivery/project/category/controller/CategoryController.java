@@ -1,6 +1,7 @@
 package com.delivery.project.category.controller;
 
 import com.delivery.project.category.dto.CategoryRequestDto;
+import com.delivery.project.category.dto.CategoryResponseDto;
 import com.delivery.project.category.dto.CategoryUpdateDto;
 import com.delivery.project.category.service.CategoryService;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,13 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     // TODO: GET    /api/v1/categories       - 카테고리 목록 조회
+
     // TODO: GET    /api/v1/categories/{id}  - 카테고리 단건 조회
+    @GetMapping("/{id}")
+    public CategoryResponseDto getCategory(@PathVariable UUID id) {
+        return categoryService.selectCategory(id);
+    }
+
     // TODO: POST   /api/v1/categories       - 카테고리 등록
     @PostMapping
     public void insertCategory(@RequestBody CategoryRequestDto requestDto) {
