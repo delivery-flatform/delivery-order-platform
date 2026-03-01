@@ -2,6 +2,7 @@ package com.delivery.project.order.controller;
 
 import com.delivery.project.global.response.ApiResponse;
 import com.delivery.project.order.dto.OrderResponseDto;
+import com.delivery.project.order.dto.OrderSearchRequestDto;
 import com.delivery.project.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,7 +25,7 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    // TODO: GET    /api/v1/orders          - 주문 목록 조회
+    // TODO: GET    /api/v1/orders/{userId}&{storedId}          - 주문 목록 조회
     @GetMapping("/list")
     //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER','CUSTOMER')")
     @Operation(summary = "주문 내역 전체 조회", description = "userId와 storeId로 주문 내역을 페이징하여 조회합니다.")
@@ -36,7 +37,20 @@ public class OrderController {
         Page<OrderResponseDto> orderPage = orderService.selectOrders(userId, storeId, pageable);
         return ResponseEntity.ok(ApiResponse.success(orderPage));
     }
-    // TODO: GET    /api/v1/orders/{id}     - 주문 단건 조회
+
+    // TODO : GET /api/v1/oredrs/listsearch/{userId}&{storedId} - 주문 검색 조회
+    @PostMapping("/listsearch")
+    //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER','CUSTOMER')")
+    @Operation(summary = "주문 내역 검색 조회", description = "userId와 storeId로 주문 내역을 검색 후 페이징하여 조회합니다.")
+    public ResponseEntity<ApiResponse<Page<OrderResponseDto>>> selectOrdersSearch(
+            @RequestBody OrderSearchRequestDto searchDto,
+            @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Page<OrderResponseDto> orderPage = orderService.selectOrdersSearch(searchDto, pageable);
+        return ResponseEntity.ok(ApiResponse.success(orderPage));
+    }
+
+    // TODO: GET    /api/v1/orders/{orderid}     - 주문 단건 조회
     @GetMapping("/{orderId}")
     //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER', 'CUSTOMER')")
     @Operation(summary = "주문 단건 조회", description = "orderId로 단건 주문을 검색해서 보여줍니다.")
