@@ -66,6 +66,7 @@ public class OrderController {
     // TODO: POST   /api/v1/orders          - 주문 생성
     @PostMapping("/oreder")
     //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'CUSTOMER')")
+    @Operation(summary = "주문 생성", description = "주문을 생성합니다.")
     public ResponseEntity<ApiResponse<OrderResponseDto>> creatOrder(@RequestBody OrderRequestDto orderRequestDto,
                                                                     @RequestParam String userId) {
 
