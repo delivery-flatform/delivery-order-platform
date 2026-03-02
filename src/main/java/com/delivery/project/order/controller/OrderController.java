@@ -1,8 +1,9 @@
 package com.delivery.project.order.controller;
 
 import com.delivery.project.global.response.ApiResponse;
-import com.delivery.project.order.dto.OrderResponseDto;
-import com.delivery.project.order.dto.OrderSearchRequestDto;
+import com.delivery.project.order.dto.request.OrderRequestDto;
+import com.delivery.project.order.dto.request.OrderSearchRequestDto;
+import com.delivery.project.order.dto.response.OrderResponseDto;
 import com.delivery.project.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,10 +60,19 @@ public class OrderController {
             @PathVariable UUID orderId) {
 
         OrderResponseDto orderResponse = orderService.selectOrder(orderId);
-
         return ResponseEntity.ok(ApiResponse.success(orderResponse));
     }
+
     // TODO: POST   /api/v1/orders          - 주문 생성
+    @PostMapping("/oreder")
+    //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'CUSTOMER')")
+    public ResponseEntity<ApiResponse<OrderResponseDto>> creatOrder(@RequestBody OrderRequestDto orderRequestDto,
+                                                                    @RequestParam String userId) {
+
+        OrderResponseDto response = orderService.createOrder(userId, orderRequestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
+    }
+
     // TODO: PATCH  /api/v1/orders/{id}/cancel - 주문 취소
     // TODO: PATCH  /api/v1/orders/{id}/status - 주문 상태 변경
 }
