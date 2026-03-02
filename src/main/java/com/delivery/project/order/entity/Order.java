@@ -93,6 +93,14 @@ public class Order {
     @Schema(description = "삭제자")
     private String deletedBy;
 
+    public enum Status {
+        PENDING, CONFIRMED, DELIVERING, COMPLETED, CANCELLED
+    }
+
+    public enum OrderType {
+        ONLINE, OFFLINE
+    }
+
     public void cancel() {
         // 이미 취소된 상태라면 중복 처리 방지
         if (this.status == Status.CANCELLED) {
@@ -106,11 +114,47 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public enum Status {
-        PENDING, CONFIRMED, DELIVERING, COMPLETED, CANCELLED
+    public void updateStatus(Status newStatus, String updatedBy) {
+        // 이미 취소되거나 완료된 주문은 변경 불가
+        if (this.status == Status.CANCELLED || this.status == Status.COMPLETED) {
+            throw new IllegalArgumentException("이미 완료되었거나 취소된 주문은 상태를 변경할 수 없습니다.");
+        }
+
+        // 논리적 흐름 검증 (예: PENDING -> DELIVERING은 가능하지만, COMPLETED -> PENDING은 불가)
+        validateStatusTransition(this.status, newStatus);
+
+        this.status = newStatus;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
     }
 
-    public enum OrderType {
-        ONLINE, OFFLINE
+    private void validateStatusTransition(Status current, Status next) {
+        boolean isValid = false;
+
+        switch (current) {
+            case PENDING:
+                // 대기 중일 때는 접수(CONFIRMED) 또는 취소(CANCELLED)만 가능
+                if (next == Status.CONFIRMED || next == Status.CANCELLED) isValid = true;
+                break;
+
+            case CONFIRMED:
+                // 접수 후에는 배달 시작(DELIVERING)만 가능
+                if (next == Status.DELIVERING) isValid = true;
+                break;
+
+            case DELIVERING:
+                // 배달 중에는 배달 완료(COMPLETED)만 가능
+                if (next == Status.COMPLETED) isValid = true;
+                break;
+
+            default:
+                isValid = false;
+        }
+
+        if (!isValid) {
+            throw new IllegalArgumentException(
+                    String.format("상태를 변경할 수 없습니다: [%s] -> [%s]", current, next)
+            );
+        }
     }
 }

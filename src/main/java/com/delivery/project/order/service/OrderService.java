@@ -86,7 +86,7 @@ public class OrderService {
 
     // TODO: 주문 생성 (이때는 @Transactional을 붙여야 함)
     @Transactional
-    public OrderResponseDto createOrder(String username, OrderRequestDto dto) {
+    public OrderResponseDto insertOrder(String username, OrderRequestDto dto) {
         // 필수 값 검증
         if (dto.getProducts() == null || dto.getProducts().isEmpty()) {
             throw new IllegalArgumentException("최소 하나 이상의 상품을 선택해야 합니다.");
@@ -167,7 +167,6 @@ public class OrderService {
         // 5분 시간 제한 체크
         LocalDateTime now = LocalDateTime.now();
         long minutesPassed = java.time.Duration.between(order.getCreatedAt(), now).toMinutes();
-
         if (minutesPassed > 5) {
             // 이 메시지가 ApiResponse.fail("에러 메시지")로 전달됩니다.
             throw new IllegalArgumentException("주문 후 5분이 경과하여 취소가 불가능합니다. (경과 시간: " + minutesPassed + "분)");
@@ -180,4 +179,24 @@ public class OrderService {
     }
 
     // TODO: 주문 상태 변경 (OWNER or MANAGER+)
+    @Transactional
+    public OrderResponseDto updateOrderStatus(UUID orderId, Order.Status newStatus, String username) {
+
+        // 주문 조회
+        Order order = orderRepository.findByIdAndDeletedAtIsNull(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("상태를 변경할 주문을 찾을 수 없습니다. ID: " + orderId));
+
+        // 권한 검증
+        // 실제로는 토큰에서 권한을 가져오거나, DB에서 해당 상점의 주인인지 조회해야 함
+        /*
+        if (!order.getStoreOwnerUsername().equals(username)) {
+            throw new IllegalArgumentException("해당 상점의 주문 상태를 변경할 권한이 없습니다.");
+        }
+        */
+
+        // 엔티티 메서드 호출 (상태 변경)
+        order.updateStatus(newStatus, username);
+
+        return OrderResponseDto.from(order);
+    }
 }
