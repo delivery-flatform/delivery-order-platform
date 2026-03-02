@@ -27,7 +27,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
+    private UserRole role;
 
     @Column(name = "is_public", nullable = false)
     private Boolean isPublic;
@@ -49,8 +49,4 @@ public class User {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
-
-    public enum Role {
-        CUSTOMER, OWNER, MANAGER, MASTER
-    }
 }
