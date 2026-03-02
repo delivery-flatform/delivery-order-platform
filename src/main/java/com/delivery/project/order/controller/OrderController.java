@@ -64,16 +64,28 @@ public class OrderController {
     }
 
     // TODO: POST   /api/v1/orders          - 주문 생성
-    @PostMapping("/oreder")
+    @PostMapping("/oreders")
     //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'CUSTOMER')")
     @Operation(summary = "주문 생성", description = "주문을 생성합니다.")
     public ResponseEntity<ApiResponse<OrderResponseDto>> creatOrder(@RequestBody OrderRequestDto orderRequestDto,
-                                                                    @RequestParam String userId) {
+                                                                    @RequestParam(value = "userId") String userId) {
 
         OrderResponseDto response = orderService.createOrder(userId, orderRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
     // TODO: PATCH  /api/v1/orders/{id}/cancel - 주문 취소
+    @PatchMapping("/{orderId}/cancel")
+    //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'CUSTOMER')")
+    @Operation(summary = "주문 취소", description = "주문 후 5분 이내인 경우에만 취소가 가능합니다.")
+    public ResponseEntity<ApiResponse<OrderResponseDto>> deleteOrder(
+            @PathVariable UUID orderId,
+            @RequestParam(value = "userId") String userId) {
+
+        OrderResponseDto response = orderService.deleteOrder(orderId, userId);
+
+        return ResponseEntity.ok(ApiResponse.success("주문이 성공적으로 취소되었습니다.", response));
+    }
+
     // TODO: PATCH  /api/v1/orders/{id}/status - 주문 상태 변경
 }

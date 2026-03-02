@@ -93,6 +93,19 @@ public class Order {
     @Schema(description = "삭제자")
     private String deletedBy;
 
+    public void cancel() {
+        // 이미 취소된 상태라면 중복 처리 방지
+        if (this.status == Status.CANCELLED) {
+            throw new IllegalArgumentException("이미 취소된 주문입니다.");
+        }
+
+        // 상태 변경
+        this.status = Status.CANCELLED;
+
+        // 수정 시간 및 수정자 갱신
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public enum Status {
         PENDING, CONFIRMED, DELIVERING, COMPLETED, CANCELLED
     }

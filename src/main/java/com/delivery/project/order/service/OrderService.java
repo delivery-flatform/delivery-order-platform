@@ -147,5 +147,37 @@ public class OrderService {
     }
 
     // TODO: 주문 취소 (5분 이내 체크 로직 필요)
+    @Transactional
+    public OrderResponseDto deleteOrder(UUID orderId, String username) {
+
+        // 주문 존재 여부 및 삭제 여부 확인
+        Order order = orderRepository.findByIdAndDeletedAtIsNull(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("취소할 주문을 찾을 수 없습니다. ID: " + orderId));
+
+        // 본인의 주문인지 확인 (보안 체크)
+        if (!order.getCustomerUsername().equals(username)) {
+            throw new IllegalArgumentException("본인의 주문만 취소할 수 있습니다.");
+        }
+
+        // 이미 취소되었거나 배달 중인지 확인
+        if (order.getStatus() != Order.Status.PENDING) {
+            throw new IllegalArgumentException("이미 처리 중이거나 취소된 주문은 상태를 변경할 수 없습니다.");
+        }
+
+        // 5분 시간 제한 체크
+        LocalDateTime now = LocalDateTime.now();
+        long minutesPassed = java.time.Duration.between(order.getCreatedAt(), now).toMinutes();
+
+        if (minutesPassed > 5) {
+            // 이 메시지가 ApiResponse.fail("에러 메시지")로 전달됩니다.
+            throw new IllegalArgumentException("주문 후 5분이 경과하여 취소가 불가능합니다. (경과 시간: " + minutesPassed + "분)");
+        }
+
+        // 상태 변경
+        order.cancel();
+
+        return OrderResponseDto.from(order);
+    }
+
     // TODO: 주문 상태 변경 (OWNER or MANAGER+)
 }
