@@ -1,7 +1,9 @@
 package com.delivery.project.ai.entity;
 
+import com.delivery.project.ai.dto.request.AiRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -27,6 +29,9 @@ public class AiLog {
     @Column(length = 1000)
     private String request;
 
+    @Column(name = "user_name", nullable = false)
+    private String userName;
+
     @Column(name = "model_name", nullable = false, length = 100)
     private String modelName;
 
@@ -36,4 +41,14 @@ public class AiLog {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    public AiLog(AiRequestDto dto, String prompt, String modelName, String userName, String createdBy) {
+        this.targetType = dto.getTargetType();
+        this.prompt = prompt;
+        this.request = dto.getRequest();
+        this.userName = userName;
+        this.modelName = modelName;
+        this.createdBy = createdBy;
+        this.createdAt = LocalDateTime.now();
+    }
 }
