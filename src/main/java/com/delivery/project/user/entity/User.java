@@ -3,6 +3,7 @@ package com.delivery.project.user.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Entity
 @Table(name = "p_user")
@@ -49,4 +50,22 @@ public class User {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
+    public void update(String nickname, String encodedPassword, String email, Boolean isPublic, String updatedBy) {
+        Optional.ofNullable(nickname).ifPresent(v -> this.nickname = v);
+        Optional.ofNullable(encodedPassword).ifPresent(v -> this.password = v);
+        Optional.ofNullable(email).ifPresent(v -> this.email = v);
+        Optional.ofNullable(isPublic).ifPresent(v -> this.isPublic = v);
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
+    }
+
+    public void softDelete(String deletedBy) {
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = deletedBy;
+    }
+
+    public void changeRole(UserRole role) {
+        this.role = role;
+    }
 }
