@@ -53,4 +53,9 @@ public class Category {
         this.isActive = requestDto.getIsActive();
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void deleteCategory(String deletedBy) {
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = deletedBy;
+    }
 }

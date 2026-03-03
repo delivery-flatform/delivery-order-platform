@@ -47,4 +47,8 @@ public class CategoryController {
     }
 
     // TODO: DELETE /api/v1/categories/{id}  - 카테고리 삭제
+    @DeleteMapping("/{id}")
+    public void deleteCategory(@PathVariable UUID id) {
+        categoryService.deleteCategory(id);
+    }
 }

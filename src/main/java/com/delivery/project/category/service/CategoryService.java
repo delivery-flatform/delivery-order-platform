@@ -77,6 +77,13 @@ public class CategoryService {
     }
 
     // TODO: 카테고리 삭제 Soft Delete (MANAGER+)
+//    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    @Transactional
+    public void deleteCategory(UUID id) {
+        Category category = this.findCategory(id);
+
+        category.deleteCategory("MANAGER"); // username 넣기
+    }
 
     private Category findCategory(UUID id) {
         return categoryRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
