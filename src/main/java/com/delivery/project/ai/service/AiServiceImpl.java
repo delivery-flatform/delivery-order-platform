@@ -10,12 +10,13 @@ import com.delivery.project.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+
+import static com.delivery.project.global.util.PageableUtil.createPageable;
 
 @Slf4j
 @Service
@@ -30,11 +31,11 @@ public class AiServiceImpl implements AiService {
         this.aiClient = aiClient;
     }
 
-
     // TODO: AI 로그 조회
     @Override
-    public Page<AiResponseDto> aiSelect(int page, int size) {
-        Pageable pageable = PageRequest.of(page,size);
+    public Page<AiResponseDto> aiSelect(int page, int size, String sortBy, boolean isAsc) {
+
+        Pageable pageable = createPageable(page,size,sortBy,isAsc);
 
         Page<AiLog> aiLog =  aiLogRepository.findAll(pageable);
         return aiLog.map(AiResponseDto::new);
@@ -66,4 +67,5 @@ public class AiServiceImpl implements AiService {
 
         return responseText;
     }
+
 }
