@@ -20,7 +20,7 @@ public class CategoryController {
 
     // TODO: GET    /api/v1/categories/{id}  - 카테고리 단건 조회
     @GetMapping("/{id}")
-    public CategoryResponseDto getCategory(@PathVariable UUID id) {
+    public CategoryResponseDto selectCategory(@PathVariable UUID id) {
         return categoryService.selectCategory(id);
     }
 
