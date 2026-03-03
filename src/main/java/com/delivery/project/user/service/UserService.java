@@ -9,6 +9,7 @@ import com.delivery.project.user.entity.UserRole;
 import com.delivery.project.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,40 +27,28 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     // 회원 목록 조회 (MANAGER+)
-    public List<UserResponseDto> findAllUsers(UserRole currentRole) {
-        boolean isManagerOrAbove = currentRole == UserRole.MANAGER || currentRole == UserRole.MASTER;
-
-        if (!isManagerOrAbove) {
-            throw new CustomException(ErrorCode.FORBIDDEN);
-        }
-
-        return userRepository.findAllByDeletedAtIsNull().stream()
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    public List<UserResponseDto> findAllUsers() {
+        List<UserResponseDto> users = userRepository.findAllByDeletedAtIsNull().stream()
                 .map(UserResponseDto::new)
                 .collect(Collectors.toList());
+        log.info("회원 목록 조회 완료 - 총 {}건", users.size());
+        return users;
     }
 
     // 회원 단건 조회 (본인 또는 MANAGER+)
-    public UserResponseDto findUser(String username, String currentUsername, UserRole currentRole) {
-        boolean isSelf = username.equals(currentUsername);
-        boolean isManagerOrAbove = currentRole == UserRole.MANAGER || currentRole == UserRole.MASTER;
-
-        if (!isSelf && !isManagerOrAbove) {
-            throw new CustomException(ErrorCode.FORBIDDEN);
-        }
-
+    @PreAuthorize("#username == authentication.name or hasAnyRole('MANAGER', 'MASTER')")
+    public UserResponseDto findUser(String username) {
         User user = userRepository.findByUsernameAndDeletedAtIsNull(username)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
+        log.info("회원 단건 조회 완료: {}", username);
         return new UserResponseDto(user);
     }
 
     // 회원 정보 수정 (본인만)
     @Transactional
+    @PreAuthorize("#username == authentication.name")
     public UserResponseDto updateUser(String username, UserUpdateRequestDto requestDto, String currentUsername) {
-        if (!username.equals(currentUsername)) {
-            throw new CustomException(ErrorCode.FORBIDDEN);
-        }
-
         User user = userRepository.findByUsernameAndDeletedAtIsNull(username)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -76,40 +65,28 @@ public class UserService {
                 : null;
 
         user.update(requestDto.getNickname(), encodedPassword, requestDto.getEmail(), requestDto.getIsPublic(), currentUsername);
-
+        log.info("회원 정보 수정 완료: {}", username);
         return new UserResponseDto(user);
     }
 
     // 회원 삭제 - Soft Delete (본인 또는 MANAGER+)
     @Transactional
-    public void deleteUser(String username, String currentUsername, UserRole currentRole) {
-        boolean isSelf = username.equals(currentUsername);
-        boolean isManagerOrAbove = currentRole == UserRole.MANAGER || currentRole == UserRole.MASTER;
-
-        if (!isSelf && !isManagerOrAbove) {
-            throw new CustomException(ErrorCode.FORBIDDEN);
-        }
-
+    @PreAuthorize("#username == authentication.name or hasAnyRole('MANAGER', 'MASTER')")
+    public void deleteUser(String username, String currentUsername) {
         User user = userRepository.findByUsernameAndDeletedAtIsNull(username)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
         user.softDelete(currentUsername);
+        log.info("회원 삭제(Soft Delete) 완료: {}", username);
     }
 
     // 권한 변경 (MANAGER+)
     @Transactional
-    public UserResponseDto changeRole(String username, UserRole newRole, UserRole currentRole) {
-        boolean isManagerOrAbove = currentRole == UserRole.MANAGER || currentRole == UserRole.MASTER;
-
-        if (!isManagerOrAbove) {
-            throw new CustomException(ErrorCode.FORBIDDEN);
-        }
-
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    public UserResponseDto changeRole(String username, UserRole newRole) {
         User user = userRepository.findByUsernameAndDeletedAtIsNull(username)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
         user.changeRole(newRole);
-
+        log.info("회원 권한 변경 완료: {} → {}", username, newRole);
         return new UserResponseDto(user);
     }
 }

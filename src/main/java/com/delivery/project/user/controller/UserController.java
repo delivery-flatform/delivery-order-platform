@@ -23,25 +23,15 @@ public class UserController {
 
     // 회원 목록 조회 (MANAGER+)
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAllUsers(
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        userService.findAllUsers(userDetails.getUser().getRole())
-                )
-        );
+    public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAllUsers() {
+        return ResponseEntity.ok(ApiResponse.success(userService.findAllUsers()));
     }
 
     // 회원 단건 조회 (본인 또는 MANAGER+)
     @GetMapping("/{username}")
     public ResponseEntity<ApiResponse<UserResponseDto>> getUser(
-            @PathVariable String username,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        userService.findUser(username, userDetails.getUsername(), userDetails.getUser().getRole())
-                )
-        );
+            @PathVariable String username) {
+        return ResponseEntity.ok(ApiResponse.success(userService.findUser(username)));
     }
 
     // 회원 정보 수정 (본인만)
@@ -62,7 +52,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<Void>> deleteUser(
             @PathVariable String username,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        userService.deleteUser(username, userDetails.getUsername(), userDetails.getUser().getRole());
+        userService.deleteUser(username, userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
@@ -70,11 +60,10 @@ public class UserController {
     @PatchMapping("/{username}/role")
     public ResponseEntity<ApiResponse<UserResponseDto>> changeRole(
             @PathVariable String username,
-            @Valid @RequestBody UserRoleUpdateRequestDto requestDto,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @Valid @RequestBody UserRoleUpdateRequestDto requestDto) {
         return ResponseEntity.ok(
                 ApiResponse.success(
-                        userService.changeRole(username, requestDto.getRole(), userDetails.getUser().getRole())
+                        userService.changeRole(username, requestDto.getRole())
                 )
         );
     }
