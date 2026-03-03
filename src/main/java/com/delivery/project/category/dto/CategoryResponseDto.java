@@ -11,13 +11,13 @@ import java.util.UUID;
 public class CategoryResponseDto {
     UUID id;
     String name;
-    boolean is_active;
+    boolean isActive;
 
     public static CategoryResponseDto from(Category category) {
         return CategoryResponseDto.builder()
                 .id(category.getId())
                 .name(category.getName())
-                .is_active(category.getIsActive())
+                .isActive(category.getIsActive())
                 .build();
     }
 }
