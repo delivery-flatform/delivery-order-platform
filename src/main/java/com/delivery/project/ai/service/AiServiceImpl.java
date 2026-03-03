@@ -15,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 @Transactional(readOnly = true)
@@ -43,14 +45,22 @@ public class AiServiceImpl implements AiService {
     @Override
     @Transactional
     public String aiInsert(AiRequestDto dto) {
-        String userName = "aa";
+        String userName = "aa"; // user값 받아와서 수정해줘야함.
 
         if(!dto.isAiTrue()){
             throw new CustomException(ErrorCode.NOT_FOUND);
         }
         String responseText = aiClient.response(dto.getRequest());
 
-        AiLog aiLog = new AiLog(dto,responseText,"gemini",userName,userName);
+        AiLog aiLog = AiLog.builder()
+                .prompt(dto.getRequest())
+                .modelName("gemini")
+                .targetType(dto.getTargetType())
+                .createdBy(userName)
+                .createdAt(LocalDateTime.now())
+                .userName(userName)
+                .response(responseText)
+                .build();
 
         aiLogRepository.save(aiLog);
 

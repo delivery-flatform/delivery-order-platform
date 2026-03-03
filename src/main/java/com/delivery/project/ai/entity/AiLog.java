@@ -27,7 +27,7 @@ public class AiLog {
     private String prompt;
 
     @Column(length = 1000)
-    private String request;
+    private String response;
 
     @Column(name = "user_name", nullable = false)
     private String userName;
@@ -42,13 +42,4 @@ public class AiLog {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public AiLog(AiRequestDto dto, String prompt, String modelName, String userName, String createdBy) {
-        this.targetType = dto.getTargetType();
-        this.prompt = prompt;
-        this.request = dto.getRequest();
-        this.userName = userName;
-        this.modelName = modelName;
-        this.createdBy = createdBy;
-        this.createdAt = LocalDateTime.now();
-    }
 }
