@@ -29,7 +29,7 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private static final List<Integer> ALLOWED_SIZES = List.of(10, 30, 50);
 
-    // TODO: 카테고리 목록 조회
+    // 카테고리 목록 조회
     @Transactional(readOnly = true)
     public Page<CategoryResponseDto> selectCategoryList(int page, int size, String sortBy, boolean isAsc) {
         Sort.Direction direction = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -48,8 +48,7 @@ public class CategoryService {
     // TODO: 카테고리 단건 조회 (MANAGER+)
     @Transactional(readOnly = true)
     public CategoryResponseDto selectCategory(UUID id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("NOT FOUND"));
+        Category category = this.findCategory(id);
 
         return CategoryResponseDto.from(category);
     }
@@ -71,11 +70,15 @@ public class CategoryService {
     // TODO: 카테고리 수정 (MANAGER+)
     @Transactional
     public void updateCategory(UUID id, CategoryUpdateDto requestDto) {
-        Category category = categoryRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+        Category category = this.findCategory(id);
 
         // TODO: updatedBy 추가
         category.updateCategory(requestDto);
     }
 
     // TODO: 카테고리 삭제 Soft Delete (MANAGER+)
+
+    private Category findCategory(UUID id) {
+        return categoryRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+    }
 }
