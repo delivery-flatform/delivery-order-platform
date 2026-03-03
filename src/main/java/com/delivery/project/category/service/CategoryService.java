@@ -32,6 +32,7 @@ public class CategoryService {
     private static final List<String> ALLOWED_SORTS = List.of("createdAt", "name");
 
     // 카테고리 목록 조회
+//    @PreAuthorize("hasAnyRole('CUSTOMER', 'OWNER', 'MANAGER', 'MASTER')")
     @Transactional(readOnly = true)
     public Page<CategoryResponseDto> selectCategoryList(int page, int size, String sortBy, boolean isAsc) {
         if (!ALLOWED_SORTS.contains(sortBy)) {
@@ -50,7 +51,8 @@ public class CategoryService {
         return categoryPage.map(CategoryResponseDto::from);
     }
 
-    // TODO: 카테고리 단건 조회 (MANAGER+)
+    // 카테고리 단건 조회 (MANAGER+)
+//    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional(readOnly = true)
     public CategoryResponseDto selectCategory(UUID id) {
         Category category = this.findCategory(id);
@@ -58,7 +60,8 @@ public class CategoryService {
         return CategoryResponseDto.from(category);
     }
 
-    // TODO: 카테고리 등록 (MANAGER+)
+    // 카테고리 등록 (MANAGER+
+//    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
     public void insertCategory(CategoryRequestDto requestDto) {
         // TODO: MANAGER 권한 이상만 추가 가능
@@ -72,7 +75,8 @@ public class CategoryService {
         categoryRepository.save(category);
     }
 
-    // TODO: 카테고리 수정 (MANAGER+)
+    // 카테고리 수정 (MANAGER+)
+//    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
     public void updateCategory(UUID id, CategoryUpdateDto requestDto) {
         Category category = this.findCategory(id);
@@ -81,7 +85,7 @@ public class CategoryService {
         category.updateCategory(requestDto);
     }
 
-    // TODO: 카테고리 삭제 Soft Delete (MANAGER+)
+    // 카테고리 삭제 Soft Delete (MANAGER+)
 //    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
     public void deleteCategory(UUID id) {

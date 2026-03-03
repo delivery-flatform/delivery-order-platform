@@ -17,7 +17,7 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    // TODO: GET    /api/v1/categories       - 카테고리 목록 조회
+    // 카테고리 목록 조회
     @GetMapping
     public Page<CategoryResponseDto> selectCategoryList(
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -28,25 +28,25 @@ public class CategoryController {
         return categoryService.selectCategoryList(page, size, sortBy, isAsc);
     }
 
-    // TODO: GET    /api/v1/categories/{id}  - 카테고리 단건 조회
+    // 카테고리 단건 조회
     @GetMapping("/{id}")
     public CategoryResponseDto selectCategory(@PathVariable UUID id) {
         return categoryService.selectCategory(id);
     }
 
-    // TODO: POST   /api/v1/categories       - 카테고리 등록
+    // 카테고리 등록
     @PostMapping
     public void insertCategory(@RequestBody CategoryRequestDto requestDto) {
         categoryService.insertCategory(requestDto);
     }
 
-    // TODO: PUT    /api/v1/categories/{id}  - 카테고리 수정
+    // 카테고리 수정
     @PutMapping("/{id}")
     public void updateCategory(@PathVariable UUID id, @RequestBody CategoryUpdateDto requestDto) {
         categoryService.updateCategory(id, requestDto);
     }
 
-    // TODO: DELETE /api/v1/categories/{id}  - 카테고리 삭제
+    // 카테고리 삭제
     @DeleteMapping("/{id}")
     public void deleteCategory(@PathVariable UUID id) {
         categoryService.deleteCategory(id);
