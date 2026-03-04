@@ -1,5 +1,7 @@
 package com.delivery.project.region.service;
 
+import com.delivery.project.global.exception.CustomException;
+import com.delivery.project.global.exception.ErrorCode;
 import com.delivery.project.region.dto.RegionRequestDto;
 import com.delivery.project.region.dto.RegionResponseDto;
 import com.delivery.project.region.entity.Region;
@@ -10,6 +12,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -18,10 +22,19 @@ public class RegionService {
 
     private final RegionRepository regionRepository;
 
+
     // TODO: 지역 목록 조회
-    // TODO: 지역 단건 조회
+
+    // 지역 단건 조회
+    @Transactional(readOnly = true)
+    public RegionResponseDto selectRegion(UUID id) {
+        Region region = findRegion(id);
+
+        return RegionResponseDto.from(region);
+    }
 
     // 지역 등록 (MANAGER+)
+
     @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
     public RegionResponseDto insertRegion(String username, RegionRequestDto requestDto) {
@@ -34,4 +47,8 @@ public class RegionService {
 
     // TODO: 지역 수정 (MANAGER+)
     // TODO: 지역 삭제 Soft Delete (MANAGER+)
+
+    private Region findRegion(UUID id) {
+        return regionRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.REGION_NOT_FOUND));
+    }
 }

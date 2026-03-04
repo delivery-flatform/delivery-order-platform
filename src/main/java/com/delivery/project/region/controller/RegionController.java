@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/regions")
 @RequiredArgsConstructor
@@ -19,8 +21,14 @@ public class RegionController {
     private final RegionService regionService;
 
     // TODO: GET    /api/v1/regions       - 지역 목록 조회
-    // TODO: GET    /api/v1/regions/{id}  - 지역 단건 조회
 
+    // 지역 단건 조회
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<RegionResponseDto>> selectRegion(@PathVariable UUID id) {
+        RegionResponseDto response = regionService.selectRegion(id);
+
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
 
     // 지역 등록
     @PostMapping
