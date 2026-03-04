@@ -58,4 +58,9 @@ public class Region {
                 .createdBy(username)
                 .build();
     }
+
+    public void deleteRegion(String username) {
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = username;
+    }
 }

@@ -2,19 +2,16 @@ package com.delivery.project.region.service;
 
 import com.delivery.project.global.exception.CustomException;
 import com.delivery.project.global.exception.ErrorCode;
-import com.delivery.project.global.response.ApiResponse;
 import com.delivery.project.region.dto.RegionRequestDto;
 import com.delivery.project.region.dto.RegionResponseDto;
 import com.delivery.project.region.entity.Region;
 import com.delivery.project.region.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +28,6 @@ public class RegionService {
     private final RegionRepository regionRepository;
     private static final List<Integer> ALLOWED_SIZES = List.of(10, 30, 50);
     private static final List<String> ALLOWED_SORTS = List.of("createdAt", "name");
-
 
     // TODO: 지역 목록 조회(지역별 필터링은 나중에 추가)
     @Transactional(readOnly = true)
@@ -54,7 +50,6 @@ public class RegionService {
     }
 
     // 지역 단건 조회
-
     @Transactional(readOnly = true)
     public RegionResponseDto selectRegion(UUID id) {
         Region region = findRegion(id);
@@ -63,7 +58,6 @@ public class RegionService {
     }
 
     // 지역 등록 (MANAGER+)
-
     @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
     public RegionResponseDto insertRegion(String username, RegionRequestDto requestDto) {
@@ -75,7 +69,13 @@ public class RegionService {
 
     // TODO: 지역 수정 (MANAGER+)
 
-    // TODO: 지역 삭제 Soft Delete (MANAGER+)
+    // 지역 삭제 Soft Delete
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    @Transactional
+    public void deleteRegion(String username, UUID id) {
+        Region region = findRegion(id);
+        region.deleteRegion(username);
+    }
 
     private Region findRegion(UUID id) {
         return regionRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.REGION_NOT_FOUND));

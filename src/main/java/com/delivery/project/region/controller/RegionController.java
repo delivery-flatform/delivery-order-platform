@@ -54,6 +54,11 @@ public class RegionController {
 
     // TODO: PUT    /api/v1/regions/{id}  - 지역 수정
 
-    // TODO: DELETE /api/v1/regions/{id}  - 지역 삭제
+    // 지역 삭제
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteRegion(@AuthenticationPrincipal UserDetailsImpl userDetails, @PathVariable UUID id) {
+        regionService.deleteRegion(userDetails.getUsername(), id);
 
+        return ResponseEntity.ok(ApiResponse.success("지역 삭제가 완료되었습니다.", null));
+    }
 }
