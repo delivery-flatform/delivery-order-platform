@@ -1,8 +1,13 @@
 package com.delivery.project.region.service;
 
+import com.delivery.project.global.security.UserDetailsImpl;
+import com.delivery.project.region.dto.RegionRequestDto;
+import com.delivery.project.region.entity.Region;
 import com.delivery.project.region.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +21,15 @@ public class RegionService {
 
     // TODO: 지역 목록 조회
     // TODO: 지역 단건 조회
-    // TODO: 지역 등록 (MANAGER+)
+
+    // 지역 등록 (MANAGER+)
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    @Transactional
+    public void insertRegion(UserDetailsImpl userDetails, RegionRequestDto requestDto) {
+        Region region = Region.toEntity(requestDto, userDetails.getUsername());
+        regionRepository.save(region);
+    }
+
     // TODO: 지역 수정 (MANAGER+)
     // TODO: 지역 삭제 Soft Delete (MANAGER+)
 }

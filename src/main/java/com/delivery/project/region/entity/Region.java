@@ -1,5 +1,6 @@
 package com.delivery.project.region.entity;
 
+import com.delivery.project.region.dto.RegionRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -46,4 +47,15 @@ public class Region {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
+    public static Region toEntity(RegionRequestDto requestDto, String username) {
+        return Region.builder()
+                .name(requestDto.getName())
+                .city(requestDto.getCity())
+                .district(requestDto.getDistrict())
+                .isActive(true)
+                .createdAt(LocalDateTime.now())
+                .createdBy(username)
+                .build();
+    }
 }
