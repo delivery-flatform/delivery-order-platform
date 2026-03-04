@@ -4,6 +4,7 @@ import com.delivery.project.global.exception.CustomException;
 import com.delivery.project.global.exception.ErrorCode;
 import com.delivery.project.region.dto.RegionRequestDto;
 import com.delivery.project.region.dto.RegionResponseDto;
+import com.delivery.project.region.dto.request.RegionUpdateRequestDto;
 import com.delivery.project.region.entity.Region;
 import com.delivery.project.region.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
@@ -67,9 +68,23 @@ public class RegionService {
         return RegionResponseDto.from(savedRegion);
     }
 
-    // TODO: 지역 수정 (MANAGER+)
 
-    // 지역 삭제 Soft Delete
+    // 지역 수정 (MANAGER+)
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    @Transactional
+    public RegionResponseDto updateRegion(String username, RegionUpdateRequestDto requestDto, UUID id) {
+        Region region = findRegion(id);
+
+        if (region.getDeletedAt() != null) {
+            throw new CustomException(ErrorCode.REGION_ALREADY_DELETED);
+        }
+
+        region.updateRegion(username, requestDto);
+
+        return RegionResponseDto.from(region);
+    }
+
+    // 지역 삭제 Soft Delete (MANAGER+)
     @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
     public void deleteRegion(String username, UUID id) {
@@ -80,4 +95,5 @@ public class RegionService {
     private Region findRegion(UUID id) {
         return regionRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.REGION_NOT_FOUND));
     }
+
 }
