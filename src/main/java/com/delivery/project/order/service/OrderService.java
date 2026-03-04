@@ -7,6 +7,8 @@ import com.delivery.project.order.entity.Order;
 import com.delivery.project.order.entity.OrderItem;
 import com.delivery.project.order.repository.OrderItemRepository;
 import com.delivery.project.order.repository.OrderRepository;
+import com.delivery.project.payment.controller.PaymentController;
+import com.delivery.project.payment.dto.PaymentConfirmRequestDto;
 import com.delivery.project.product.entity.Product;
 import com.delivery.project.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +38,8 @@ public class OrderService {
     private ProductRepository productRepository;
     @Autowired
     private OrderItemRepository orderItemRepository;
+    @Autowired
+    private PaymentController paymentController;
 
     // TODO: 주문 전체 조회
     public Page<OrderResponseDto> selectOrders(String userId, String storeId, Pageable pageable) {
@@ -86,7 +91,7 @@ public class OrderService {
 
     // TODO: 주문 생성 (이때는 @Transactional을 붙여야 함)
     @Transactional
-    public OrderResponseDto insertOrder(String username, OrderRequestDto dto) {
+    public OrderResponseDto insertOrder(String username, OrderRequestDto dto, String paymentKey) {
         // 필수 값 검증
         if (dto.getProducts() == null || dto.getProducts().isEmpty()) {
             throw new IllegalArgumentException("최소 하나 이상의 상품을 선택해야 합니다.");
@@ -117,7 +122,7 @@ public class OrderService {
                 .customerUsername(username)
                 .storeId(dto.getStoreId())
                 .totalPrice(totalOrderPrice)
-                .status(Order.Status.PENDING) // 내부 Enum 사용
+                .status(Order.Status.PENDING)
                 .deliveryAddress(dto.getAddress())
                 .requestNote(dto.getComment())
                 .orderType("ONLINE")
@@ -127,21 +132,37 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-        // OrderItem 리스트 생성 및 저장
-        List<OrderItem> orderItems = dto.getProducts().stream()
-                .map(item -> {
-                    Product p = productMap.get(item.getProductId());
-                    return OrderItem.builder()
-                            .orderId(savedOrder.getId())
-                            .productName(p.getName())
-                            .productPrice(p.getPrice())
-                            .quantity(item.getQuantity())
-                            .createdAt(LocalDateTime.now())
-                            .createdBy(username)
-                            .build();
-                }).toList();
+        PaymentConfirmRequestDto paymentRequest = new PaymentConfirmRequestDto(
+                paymentKey,
+                savedOrder.getId().toString(), // 주문 ID 전달
+                totalOrderPrice
+        );
+        ResponseEntity<Boolean> isPaymentConfirmed = paymentController.insertPayment(paymentRequest);
 
-        orderItemRepository.saveAll(orderItems);
+        // OrderItem 세부 정보 리스트 생성 및 저장
+        try {
+            if (Boolean.TRUE.equals(isPaymentConfirmed.getBody())) {
+
+                List<OrderItem> orderItems = dto.getProducts().stream()
+                        .map(item -> {
+                            Product p = productMap.get(item.getProductId());
+                            return OrderItem.builder()
+                                    .orderId(savedOrder.getId())
+                                    .productName(p.getName())
+                                    .productPrice(p.getPrice())
+                                    .quantity(item.getQuantity())
+                                    .createdAt(LocalDateTime.now())
+                                    .createdBy(username)
+                                    .build();
+                        }).toList();
+
+                orderItemRepository.saveAll(orderItems);
+            } else {
+                throw new RuntimeException("결제 승인 거절됨");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("결제 프로세스 중 오류 발생: " + e.getMessage());
+        }
 
         return OrderResponseDto.from(savedOrder);
     }

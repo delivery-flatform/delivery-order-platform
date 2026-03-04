@@ -64,14 +64,15 @@ public class OrderController {
     }
 
     // TODO: POST   /api/v1/orders          - 주문 생성
-    @PostMapping("/oreders")
+    @PostMapping("/order")
     //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'CUSTOMER')")
     @Operation(summary = "주문 생성", description = "주문을 생성합니다.")
     public ResponseEntity<ApiResponse<OrderResponseDto>> insertOrder(
             @RequestBody OrderRequestDto orderRequestDto,
-            @RequestParam(value = "userId") String userId) {
+            @RequestParam(value = "userId") String userId,
+            @RequestParam(value = "paymentKey") String paymentKey) {
 
-        OrderResponseDto response = orderService.insertOrder(userId, orderRequestDto);
+        OrderResponseDto response = orderService.insertOrder(userId, orderRequestDto, paymentKey);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 

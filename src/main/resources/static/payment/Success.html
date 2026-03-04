@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <title>주문 처리 중</title>
+</head>
+<body>
+<div style="text-align: center; margin-top: 100px; font-family: sans-serif;">
+    <h2>결제 인증 성공!</h2>
+    <p>주문을 생성하고 결제를 최종 승인 중입니다. 잠시만 기다려주세요...</p>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentKey = urlParams.get("paymentKey");
+    const amount = urlParams.get("amount");
+    const userId = urlParams.get("userId");
+
+    async function createOrder() {
+        try {
+            // [주의] OrderController의 @PostMapping 경로와 파라미터에 맞춤
+            // 현재 컨트롤러는 /api/v1/orders/orders 로 되어 있을 확률이 높으므로 확인 필요
+            const response = await fetch(`/api/v1/orders/order?userId=${userId}&paymentKey=${paymentKey}`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    storeId: "00000000-0000-0000-0000-000000000000", // 테스트용 Store UUID
+                    address: "서울시 강남구 테헤란로",
+                    comment: "조심히 와주세요",
+                    products: [
+                        {productId: "00000000-0000-0000-0000-000000000000", quantity: 1} // 테스트용 Product UUID
+                    ]
+                }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                alert("주문 및 결제가 완료되었습니다!");
+                location.href = "/";
+            } else {
+                alert("처리 실패: " + (result.message || "오류 발생"));
+                location.href = "/payment/fail.html";
+            }
+        } catch (err) {
+            console.error("네트워크 에러:", err);
+            alert("서버 연결 실패");
+        }
+    }
+
+    if (paymentKey && userId) {
+        createOrder();
+    }
+</script>
+</body>
+</html>
