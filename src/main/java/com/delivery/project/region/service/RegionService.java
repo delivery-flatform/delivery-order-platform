@@ -63,6 +63,11 @@ public class RegionService {
         Region region = Region.toEntity(requestDto, username);
         Region savedRegion = regionRepository.save(region);
 
+        log.info("지역 등록 완료 regionId={}, regionName={}, username={}",
+                savedRegion.getId(),
+                savedRegion.getName(),
+                username);
+
         return RegionResponseDto.from(savedRegion);
     }
 
@@ -75,6 +80,8 @@ public class RegionService {
 
         region.updateRegion(username, requestDto);
 
+        log.info("지역 수정 완료 regionId={}, username={}", id, username);
+
         return RegionResponseDto.from(region);
     }
 
@@ -86,6 +93,9 @@ public class RegionService {
 
         region.updateStatus(username, isActive);
 
+        log.info("지역 상태 변경 regionId={}, isActive={}, username={}",
+                id, isActive, username);
+
         return RegionResponseDto.from(region);
     }
 
@@ -95,6 +105,8 @@ public class RegionService {
     public void deleteRegion(String username, UUID id) {
         Region region = findRegion(id);
         region.deleteRegion(username);
+
+        log.info("지역 삭제 완료 regionId={}, username={}", id, username);
     }
 
     private Region findRegion(UUID id) {

@@ -22,7 +22,7 @@ public class RegionController {
 
     private final RegionService regionService;
 
-    // TODO: GET    /api/v1/regions       - 지역 목록 조회
+    // 지역 목록 조회
     @GetMapping
     public ResponseEntity<Page<RegionResponseDto>> selectRegionList(
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -40,7 +40,7 @@ public class RegionController {
     public ResponseEntity<ApiResponse<RegionResponseDto>> selectRegion(@PathVariable UUID id) {
         RegionResponseDto response = regionService.selectRegion(id);
 
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(ApiResponse.success("조회가 완료되었습니다.", response));
     }
 
     // 지역 등록
