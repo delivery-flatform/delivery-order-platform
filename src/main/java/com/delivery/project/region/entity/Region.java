@@ -77,6 +77,12 @@ public class Region {
         this.updatedBy = username;
     }
 
+    public void updateStatus(String username, boolean isActive) {
+        this.isActive = isActive;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = username;
+    }
+
     public void deleteRegion(String username) {
         this.deletedAt = LocalDateTime.now();
         this.deletedBy = username;

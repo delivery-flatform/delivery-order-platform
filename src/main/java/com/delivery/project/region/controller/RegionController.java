@@ -7,10 +7,8 @@ import com.delivery.project.region.dto.RegionResponseDto;
 import com.delivery.project.region.dto.request.RegionUpdateRequestDto;
 import com.delivery.project.region.service.RegionService;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -62,6 +60,18 @@ public class RegionController {
         RegionResponseDto response = regionService.updateRegion(userDetails.getUsername(), requestDto, id);
 
         return ResponseEntity.ok(ApiResponse.success("지역 수정이 완료되었습니다.", response));
+    }
+
+    // 지역 상태 변경
+    @PutMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<RegionResponseDto>> updateRegionStatus(
+            @PathVariable UUID id,
+            @RequestParam boolean isActive,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        RegionResponseDto response = regionService.updateRegionStatus(id, isActive, userDetails.getUsername());
+
+        return ResponseEntity.ok(ApiResponse.success("지역 상태 변경되었습니다.", response));
     }
 
     // 지역 삭제

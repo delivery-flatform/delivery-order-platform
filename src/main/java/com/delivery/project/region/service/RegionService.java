@@ -31,7 +31,6 @@ public class RegionService {
     private static final List<String> ALLOWED_SORTS = List.of("createdAt", "name");
 
     // TODO: 지역 목록 조회(지역별 필터링은 나중에 추가)
-    @Transactional(readOnly = true)
     public Page<RegionResponseDto> selectRegionList(int page, int size, String sortBy, boolean isAsc) {
         if (!ALLOWED_SORTS.contains(sortBy)) {
             sortBy = "createdAt";
@@ -51,7 +50,6 @@ public class RegionService {
     }
 
     // 지역 단건 조회
-    @Transactional(readOnly = true)
     public RegionResponseDto selectRegion(UUID id) {
         Region region = findRegion(id);
 
@@ -73,13 +71,20 @@ public class RegionService {
     @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
     public RegionResponseDto updateRegion(String username, RegionUpdateRequestDto requestDto, UUID id) {
-        Region region = findRegion(id);
-
-        if (region.getDeletedAt() != null) {
-            throw new CustomException(ErrorCode.REGION_ALREADY_DELETED);
-        }
+        Region region = findActiveRegion(id);
 
         region.updateRegion(username, requestDto);
+
+        return RegionResponseDto.from(region);
+    }
+
+    // 지역 상태 변경 (MANAGER+)
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    @Transactional
+    public RegionResponseDto updateRegionStatus(UUID id, boolean isActive, String username) {
+        Region region = findActiveRegion(id);
+
+        region.updateStatus(username, isActive);
 
         return RegionResponseDto.from(region);
     }
@@ -96,4 +101,13 @@ public class RegionService {
         return regionRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.REGION_NOT_FOUND));
     }
 
+    private Region findActiveRegion(UUID id) {
+        Region region = findRegion(id);
+
+        if (region.getDeletedAt() != null) {
+            throw new CustomException(ErrorCode.REGION_ALREADY_DELETED);
+        }
+
+        return region;
+    }
 }
