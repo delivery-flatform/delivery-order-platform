@@ -8,7 +8,7 @@ public interface AiService {
 
     Page<AiResponseDto> aiSelect(int page, int size, String sortBy, boolean isAsc, String search);
 
-    String aiInsert(AiRequestDto dto);
+    String aiInsert(AiRequestDto dto, String username);
 
 
 }

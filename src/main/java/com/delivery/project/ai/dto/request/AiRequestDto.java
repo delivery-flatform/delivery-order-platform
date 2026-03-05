@@ -1,9 +1,13 @@
 package com.delivery.project.ai.dto.request;
 
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
+@Builder
+@AllArgsConstructor
 public class AiRequestDto {
 
     private boolean aiTrue;

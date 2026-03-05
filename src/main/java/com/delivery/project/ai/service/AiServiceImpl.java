@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,10 @@ public class AiServiceImpl implements AiService {
     @Override
     @PreAuthorize("hasAnyRole('MASTER','MANAGER')")
     public Page<AiResponseDto> aiSelect(int page, int size, String sortBy, boolean isAsc, String search) {
+        System.out.println(SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getAuthorities());
+
 
         Pageable pageable = createPageable(page,size,sortBy,isAsc);
 
@@ -56,11 +61,10 @@ public class AiServiceImpl implements AiService {
     @Override
     @Transactional
     @PreAuthorize("hasRole('CUSTOMER')")
-    public String aiInsert(AiRequestDto dto) {
-        String userName = "aa"; // user값 받아와서 수정해줘야함.
+    public String aiInsert(AiRequestDto dto, String username) {
 
         if(!dto.isAiTrue()){
-            throw new CustomException(ErrorCode.NOT_FOUND);
+            throw new CustomException(ErrorCode.FORBIDDEN);
         }
         String responseText = aiClient.response(dto.getRequest());
 
@@ -68,9 +72,9 @@ public class AiServiceImpl implements AiService {
                 .prompt(dto.getRequest())
                 .modelName("gemini")
                 .targetType(dto.getTargetType())
-                .createdBy(userName)
+                .createdBy(username)
                 .createdAt(LocalDateTime.now())
-                .userName(userName)
+                .userName(username)
                 .response(responseText)
                 .build();
 
