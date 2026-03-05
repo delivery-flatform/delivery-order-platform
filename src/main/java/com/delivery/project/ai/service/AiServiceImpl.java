@@ -18,8 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
-import static com.delivery.project.global.util.PageableUtil.createPageable;
-
 @Slf4j
 @Service
 @Transactional(readOnly = true)
@@ -36,13 +34,7 @@ public class AiServiceImpl implements AiService {
     // TODO: AI 로그 조회
     @Override
     @PreAuthorize("hasAnyRole('MASTER','MANAGER')")
-    public Page<AiResponseDto> aiSelect(int page, int size, String sortBy, boolean isAsc, String search) {
-        System.out.println(SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getAuthorities());
-
-
-        Pageable pageable = createPageable(page,size,sortBy,isAsc);
+    public Page<AiResponseDto> aiSelect(Pageable pageable, String search) {
 
         Page<AiLog> aiLog;
 
@@ -60,7 +52,7 @@ public class AiServiceImpl implements AiService {
     //  config로 분리해서 로직 단순화
     @Override
     @Transactional
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasRole('OWENR')")
     public String aiInsert(AiRequestDto dto, String username) {
 
         if(!dto.isAiTrue()){
