@@ -8,9 +8,14 @@ import com.delivery.project.global.security.UserDetailsImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/ai")
@@ -18,6 +23,8 @@ import org.springframework.web.bind.annotation.*;
 public class AiController {
 
     private final AiServiceImpl aiService;
+
+    private final List<Integer> allowedSizes = List.of(10, 30, 50);
 
     // TODO: GET  /api/v1/ai/logs        - AI 로그 조회 (MANAGER+)
     @GetMapping("/logs")
@@ -28,8 +35,15 @@ public class AiController {
             @RequestParam(defaultValue = "true",name="isAsc") boolean isAsc,
             @RequestParam(required = false, value = "search") String search
     ) {
-        Page<AiResponseDto> result = aiService.aiSelect(
-                page - 1, size, sortBy, isAsc, search);
+        // 페이징 처리 로직
+        int finalSize = allowedSizes.contains(size) ? size : 10;
+
+        Sort.Direction direction = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, sortBy);
+
+        Pageable pageable = PageRequest.of(page - 1, finalSize, sort);
+
+        Page<AiResponseDto> result = aiService.aiSelect(pageable, search);
         return ResponseEntity.ok(ApiResponse.success(result).getData());
     }
 
