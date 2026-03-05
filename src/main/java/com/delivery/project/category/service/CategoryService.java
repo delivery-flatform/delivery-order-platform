@@ -32,6 +32,8 @@ public class CategoryService {
         Pageable pageable = createPageable(page,size,sortBy,isAsc);
         Page<Category> categoryPage = categoryRepository.findAllByDeletedAtIsNull(pageable);
 
+        log.info("카테고리 목록 조회 완료 totalElements={}", categoryPage.getTotalElements());
+
         return categoryPage.map(CategoryResponseDto::from);
     }
 
@@ -39,6 +41,8 @@ public class CategoryService {
     @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     public CategoryResponseDto selectCategory(UUID id) {
         Category category = findActiveCategory(id);
+
+        log.info("카테고리 단건 조회 완료 categoryId={}, categoryName={}", id, category.getName());
 
         return CategoryResponseDto.from(category);
     }
@@ -50,7 +54,7 @@ public class CategoryService {
         Category category = Category.toEntity(requestDto, username);
         Category savedCategory = categoryRepository.save(category);
 
-        log.info(String.valueOf(category.getId()));
+        log.info("카테고리 등록 완료 categoryId={}, username={}", savedCategory.getId(), username);
 
         return CategoryResponseDto.from(savedCategory);
     }
@@ -77,13 +81,18 @@ public class CategoryService {
     }
 
     private Category findCategory(UUID id) {
-        return categoryRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+        return categoryRepository.findById(id).orElseThrow(() -> {
+            log.warn("카테고리 조회 실패 categoryId={}", id);
+            
+            return new CustomException(ErrorCode.CATEGORY_NOT_FOUND);
+        });
     }
 
     private Category findActiveCategory(UUID id) {
         Category category = findCategory(id);
 
         if (category.getDeletedAt() != null) {
+            log.warn("삭제된 카테고리 접근 시도 categoryId={}", id);
             throw new CustomException(ErrorCode.CATEGORY_ALREADY_DELETED);
         }
 
