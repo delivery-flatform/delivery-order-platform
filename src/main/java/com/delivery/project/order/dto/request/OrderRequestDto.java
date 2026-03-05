@@ -13,6 +13,8 @@ public class OrderRequestDto {
     private String address;
     private String comment;
     private List<ProductItem> products;
+    private List<String> productNameList;
+    private Integer amount;
 
     @Getter
     @NoArgsConstructor
@@ -20,4 +22,5 @@ public class OrderRequestDto {
         private UUID productId;
         private Integer quantity;
     }
+
 }

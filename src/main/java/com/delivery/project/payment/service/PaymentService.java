@@ -1,19 +1,27 @@
 package com.delivery.project.payment.service;
 
-import com.delivery.project.payment.dto.PaymentConfirmRequestDto;
+import com.delivery.project.order.entity.Order;
+import com.delivery.project.order.repository.OrderRepository;
+import com.delivery.project.payment.dto.request.PaymentConfirmRequestDto;
+import com.delivery.project.payment.dto.response.PaymentResponseDto;
 import com.delivery.project.payment.entity.Payment;
 import com.delivery.project.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,18 +35,26 @@ public class PaymentService {
 
     @Autowired
     private PaymentRepository paymentRepository;
+    @Autowired
+    private OrderRepository orderRepository;
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String TOSS_SECRET_KEY = "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6";
+    private final String TOSS_SECRET_KEY = "test_sk_mBZ1gQ4YVXK4AxDjYdx93l2KPoqN";
 
+    @Transactional
     public boolean selectPaymentConfirm(PaymentConfirmRequestDto dto) {
         String url = "https://api.tosspayments.com/v1/payments/confirm";
-
-        // 헤더 설정: 인증 정보 및 컨텐츠 타입
         HttpHeaders headers = new HttpHeaders();
-        String encodedAuth = Base64.getEncoder().encodeToString(TOSS_SECRET_KEY.getBytes());
+
+        // trim() 추가 및 명확한 시크릿 키 사용 확인
+        String secret = TOSS_SECRET_KEY.trim();
+        String auth = secret + ":";
+        String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+
         headers.set("Authorization", "Basic " + encodedAuth);
         headers.setContentType(MediaType.APPLICATION_JSON);
+
+        log.info("보내는 요청 데이터: paymentKey={}, orderId={}, amount={}", dto.getPaymentKey(), dto.getOrderId(), dto.getAmount());
 
         // 요청 파라미터 구성
         Map<String, Object> params = new HashMap<>();
@@ -50,13 +66,32 @@ public class PaymentService {
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(params, headers);
             ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
 
-            return response.getStatusCode().is2xxSuccessful();
-        } catch (Exception e) {
-            log.error("토스 결제 승인 실패: {}", e.getMessage());
+            if (response.getStatusCode().is2xxSuccessful()) {
+                // [중요] 1. 주문(Order) 상태 업데이트
+                // dto.getOrderId()는 우리 DB의 주문 UUID입니다.
+                Order order = orderRepository.findById(UUID.fromString(dto.getOrderId()))
+                        .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
+
+                // [중요] 2. 결제(Payment) 내역 DB 저장
+                Payment payment = Payment.builder()
+                        .orderId(order.getId())
+                        .paymentMethod(dto.getPaymentKey())
+                        .amount(dto.getAmount())
+                        .status("DONE") // 토스 승인 완료 상태
+                        .createdAt(LocalDateTime.now())
+                        .createdBy(order.getCustomerUsername())
+                        .build();
+                paymentRepository.save(payment);
+
+                log.info("결제 승인 및 DB 저장 성공: orderId={}", dto.getOrderId());
+                return true;
+            }
+            return false;
+        } catch (HttpStatusCodeException e) {
+            log.error("토스 승인 거절 사유: {}", e.getResponseBodyAsString());
             return false;
         }
     }
-
 
     // TODO: 결제 단건 조회
     public PaymentConfirmRequestDto selectPayment(UUID orderId) {
@@ -68,5 +103,9 @@ public class PaymentService {
     }
 
     // TODO: 결제 목록 조회
+    public Page<PaymentResponseDto> getPaymentList(String username, Pageable pageable) {
+        Page<Payment> payments = paymentRepository.findAllByUsername(username, pageable);
 
+        return payments.map(PaymentResponseDto::fromEntity);
+    }
 }

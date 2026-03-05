@@ -7,8 +7,6 @@ import com.delivery.project.order.entity.Order;
 import com.delivery.project.order.entity.OrderItem;
 import com.delivery.project.order.repository.OrderItemRepository;
 import com.delivery.project.order.repository.OrderRepository;
-import com.delivery.project.payment.controller.PaymentController;
-import com.delivery.project.payment.dto.PaymentConfirmRequestDto;
 import com.delivery.project.product.entity.Product;
 import com.delivery.project.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,10 +35,9 @@ public class OrderService {
     private ProductRepository productRepository;
     @Autowired
     private OrderItemRepository orderItemRepository;
-    @Autowired
-    private PaymentController paymentController;
 
     // TODO: 주문 전체 조회
+    //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER','CUSTOMER')")
     public Page<OrderResponseDto> selectOrders(String userId, String storeId, Pageable pageable) {
         Page<Order> orderPage;
 
@@ -55,6 +51,7 @@ public class OrderService {
     }
 
     // TODO: 주문 검색 조회
+    //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER','CUSTOMER')")
     public Page<OrderResponseDto> selectOrdersSearch(OrderSearchRequestDto dto, Pageable pageable) {
 
         if (dto.getStoreId() != null) {
@@ -81,6 +78,7 @@ public class OrderService {
     }
 
     // TODO: 주문 단건 조회
+    //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER', 'CUSTOMER')")
     public OrderResponseDto selectOrder(UUID orderId) {
 
         Order order = orderRepository.findByIdAndDeletedAtIsNull(orderId)
@@ -91,37 +89,37 @@ public class OrderService {
 
     // TODO: 주문 생성 (이때는 @Transactional을 붙여야 함)
     @Transactional
-    public OrderResponseDto insertOrder(String username, OrderRequestDto dto, String paymentKey) {
-        // 필수 값 검증
-        if (dto.getProducts() == null || dto.getProducts().isEmpty()) {
-            throw new IllegalArgumentException("최소 하나 이상의 상품을 선택해야 합니다.");
+    public OrderResponseDto insertOrder(String username, OrderRequestDto dto) {
+        // 상품 정보 조회
+        List<String> requestNames = dto.getProductNameList();
+
+        // 상품명으로 한 번의 쿼리로 모든 상품 정보 조회
+        List<Product> foundProducts = productRepository.findAllByNameInAndDeletedAtIsNull(requestNames);
+
+        //요청한 상품 수와 DB에서 찾은 상품 수가 다르면 에러 처리
+        if (foundProducts.size() != requestNames.size()) {
+            throw new IllegalArgumentException("일부 상품을 찾을 수 없습니다. 요청: " + requestNames.size() + "건");
         }
 
-        // 주문 상품 ID추출
-        List<UUID> productIds = dto.getProducts().stream()
-                .map(OrderRequestDto.ProductItem::getProductId)
-                .toList();
+        // 상품 정보를 Map으로 변환 (이름 -> Product 객체)하여 매핑 속도 최적화
+        Map<String, Product> productMap = foundProducts.stream()
+                .collect(Collectors.toMap(Product::getName, p -> p));
 
-        // 모든 주문 상품 조회 후 products에 저장
-        List<Product> products = productRepository.findAllByIdInAndDeletedAtIsNull(productIds);
-        if (products.size() != productIds.size()) {
-            throw new IllegalArgumentException("일부 상품을 찾을 수 없거나 품절되었습니다.");
-        }
+        // 총 금액 계산
+        int calculatedTotalAmount = foundProducts.stream()
+                .mapToInt(Product::getPrice)
+                .sum();
 
-        // 상품 리스트 순회하며 검증 및 가격 합산
-        Map<UUID, Product> productMap = products.stream()
-                .collect(Collectors.toMap(Product::getId, p -> p));
-        int totalOrderPrice = 0;
-        for (OrderRequestDto.ProductItem item : dto.getProducts()) {
-            Product product = productMap.get(item.getProductId());
-            totalOrderPrice += (product.getPrice() * item.getQuantity());
-        }
+        // 리스트 중 첫번재 상품을 대표로 저장
+        UUID representativeProductId = foundProducts.get(0).getId();
 
-        // Order 엔티티 생성 및 저장
+        // 3. [FIRST] p_order 테이블 먼저 생성 및 저장
+        // ID가 외래키이므로 부모인 Order가 먼저 DB에 들어가야 합니다.
         Order order = Order.builder()
                 .customerUsername(username)
                 .storeId(dto.getStoreId())
-                .totalPrice(totalOrderPrice)
+                .productId(representativeProductId)
+                .totalPrice(calculatedTotalAmount)
                 .status(Order.Status.PENDING)
                 .deliveryAddress(dto.getAddress())
                 .requestNote(dto.getComment())
@@ -130,45 +128,31 @@ public class OrderService {
                 .createdBy(username)
                 .build();
 
+        // 여기서 save를 호출하면 JPA가 객체에 UUID(id)를 할당합니다.
         Order savedOrder = orderRepository.save(order);
 
-        PaymentConfirmRequestDto paymentRequest = new PaymentConfirmRequestDto(
-                paymentKey,
-                savedOrder.getId().toString(), // 주문 ID 전달
-                totalOrderPrice
-        );
-        ResponseEntity<Boolean> isPaymentConfirmed = paymentController.insertPayment(paymentRequest);
+        // p_order_item 리스트 생성 (발급된 order_id 사용)
+        List<OrderItem> orderItems = foundProducts.stream()
+                .map(product -> OrderItem.builder()
+                        .orderId(savedOrder.getId())
+                        .productName(product.getName())
+                        .productPrice(product.getPrice())
+                        .quantity(1) // 현재는 기본 1개로 설정 (필요 시 DTO에서 수량 매핑 가능)
+                        .createdAt(LocalDateTime.now())
+                        .createdBy(username)
+                        .build())
+                .toList();
 
-        // OrderItem 세부 정보 리스트 생성 및 저장
-        try {
-            if (Boolean.TRUE.equals(isPaymentConfirmed.getBody())) {
+        // 자식 테이블들 저장
+        orderItemRepository.saveAll(orderItems);
 
-                List<OrderItem> orderItems = dto.getProducts().stream()
-                        .map(item -> {
-                            Product p = productMap.get(item.getProductId());
-                            return OrderItem.builder()
-                                    .orderId(savedOrder.getId())
-                                    .productName(p.getName())
-                                    .productPrice(p.getPrice())
-                                    .quantity(item.getQuantity())
-                                    .createdAt(LocalDateTime.now())
-                                    .createdBy(username)
-                                    .build();
-                        }).toList();
-
-                orderItemRepository.saveAll(orderItems);
-            } else {
-                throw new RuntimeException("결제 승인 거절됨");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("결제 프로세스 중 오류 발생: " + e.getMessage());
-        }
-
+        // 생성된 주문 정보를 반환 (이 ID를 프론트에서 Toss orderId로 사용)
         return OrderResponseDto.from(savedOrder);
     }
 
     // TODO: 주문 취소 (5분 이내 체크 로직 필요)
     @Transactional
+    //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'CUSTOMER','OWNER')")
     public OrderResponseDto deleteOrder(UUID orderId, String username) {
 
         // 주문 존재 여부 및 삭제 여부 확인
@@ -201,6 +185,7 @@ public class OrderService {
 
     // TODO: 주문 상태 변경 (OWNER or MANAGER+)
     @Transactional
+    //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'OWNER')")
     public OrderResponseDto updateOrderStatus(UUID orderId, Order.Status newStatus, String username) {
 
         // 주문 조회

@@ -40,8 +40,8 @@ public class Order {
     @Schema(description = "주문 상품 정보 (연관 관계)")
     private Product product;
 
-    @Column(name = "product_id", nullable = false)
-    @Schema(description = "상품 ID")
+    @Column(name = "product_id", nullable = true)
+    @Schema(description = "상품 ID (여러 개의 상품 저장)")
     private UUID productId;
 
     @Column(name = "store_id", nullable = false)

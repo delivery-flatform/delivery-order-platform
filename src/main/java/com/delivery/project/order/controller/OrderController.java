@@ -29,7 +29,6 @@ public class OrderController {
 
     // TODO: GET    /api/v1/orders/{userId}&{storedId}          - 주문 목록 조회
     @GetMapping("/list")
-    //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER','CUSTOMER')")
     @Operation(summary = "주문 내역 전체 조회", description = "userId와 storeId로 주문 내역을 페이징하여 조회합니다.")
     public ResponseEntity<ApiResponse<Page<OrderResponseDto>>> selectOrders(
             @RequestParam(value = "userId", required = false) String userId,
@@ -42,7 +41,6 @@ public class OrderController {
 
     // TODO : GET /api/v1/oredrs/listsearch/{userId}&{storedId} - 주문 검색 조회
     @PostMapping("/listsearch")
-    //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER','CUSTOMER')")
     @Operation(summary = "주문 내역 검색 조회", description = "userId와 storeId로 주문 내역을 검색 후 페이징하여 조회합니다.")
     public ResponseEntity<ApiResponse<Page<OrderResponseDto>>> selectOrdersSearch(
             @RequestBody OrderSearchRequestDto searchDto,
@@ -54,7 +52,6 @@ public class OrderController {
 
     // TODO: GET    /api/v1/orders/{orderId}     - 주문 단건 조회
     @GetMapping("/{orderId}")
-    //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER', 'CUSTOMER')")
     @Operation(summary = "주문 단건 조회", description = "orderId로 단건 주문을 검색해서 보여줍니다.")
     public ResponseEntity<ApiResponse<OrderResponseDto>> selectOrder(
             @PathVariable UUID orderId) {
@@ -65,20 +62,19 @@ public class OrderController {
 
     // TODO: POST   /api/v1/orders          - 주문 생성
     @PostMapping("/order")
-    //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'CUSTOMER')")
-    @Operation(summary = "주문 생성", description = "주문을 생성합니다.")
-    public ResponseEntity<ApiResponse<OrderResponseDto>> insertOrder(
+    @Operation(summary = "주문 생성", description = "결제 전 주문 정보를 DB에 먼저 저장하고 주문 ID를 반환합니다.")
+    public ResponseEntity<ApiResponse<OrderResponseDto>> createOrder(
             @RequestBody OrderRequestDto orderRequestDto,
-            @RequestParam(value = "userId") String userId,
-            @RequestParam(value = "paymentKey") String paymentKey) {
+            @RequestParam(value = "userId") String userId) {
 
-        OrderResponseDto response = orderService.insertOrder(userId, orderRequestDto, paymentKey);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
+        OrderResponseDto response = orderService.insertOrder(userId, orderRequestDto);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(response));
     }
 
     // TODO: PATCH  /api/v1/orders/{id}/cancel - 주문 취소
     @PatchMapping("/{orderId}/cancel")
-    //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'CUSTOMER','OWNER')")
     @Operation(summary = "주문 취소", description = "주문 후 5분 이내인 경우에만 취소( CANCELLED )가 가능합니다.")
     public ResponseEntity<ApiResponse<OrderResponseDto>> deleteOrder(
             @PathVariable UUID orderId,
@@ -91,7 +87,6 @@ public class OrderController {
 
     // TODO: PATCH  /api/v1/orders/{id}/status - 주문 상태 변경
     @PatchMapping("/{orderId}/status")
-    //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'OWNER')")
     @Operation(summary = "주문 상태 변경", description = "주문의 진행 상태( 메뉴준비중,주문수락,배달중,완료 )를 변경합니다.")
     public ResponseEntity<ApiResponse<OrderResponseDto>> updateOrderStatus(
             @PathVariable UUID orderId,
