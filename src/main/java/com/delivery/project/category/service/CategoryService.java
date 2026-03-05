@@ -67,12 +67,13 @@ public class CategoryService {
     }
 
     // 카테고리 삭제 Soft Delete (MANAGER+)
-//    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
-    public void deleteCategory(UUID id) {
+    public void deleteCategory(UUID id, String username) {
         Category category = this.findCategory(id);
+        category.deleteCategory(username);
 
-        category.deleteCategory("MANAGER"); // username 넣기
+        log.info("카테고리 삭제 완료 categoryId={}, username={}", id, username);
     }
 
     private Category findCategory(UUID id) {

@@ -62,7 +62,9 @@ public class CategoryController {
 
     // 카테고리 삭제
     @DeleteMapping("/{id}")
-    public void deleteCategory(@PathVariable UUID id) {
-        categoryService.deleteCategory(id);
+    public ResponseEntity<ApiResponse<Void>> deleteCategory(@AuthenticationPrincipal UserDetailsImpl userDetails, @PathVariable UUID id) {
+        categoryService.deleteCategory(id, userDetails.getUsername());
+
+        return ResponseEntity.ok(ApiResponse.success("카테고리 삭제 완료", null));
     }
 }
