@@ -1,8 +1,11 @@
 package com.delivery.project.payment.service;
 
 import com.delivery.project.payment.dto.PaymentConfirmRequestDto;
+import com.delivery.project.payment.entity.Payment;
+import com.delivery.project.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,12 +17,16 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PaymentService {
+
+    @Autowired
+    private PaymentRepository paymentRepository;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final String TOSS_SECRET_KEY = "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6";
@@ -49,7 +56,17 @@ public class PaymentService {
             return false;
         }
     }
-    // TODO: 결제 처리 (카드만, DB 기록)
+
+
     // TODO: 결제 단건 조회
+    public PaymentConfirmRequestDto selectPayment(UUID orderId) {
+
+        Payment payment = paymentRepository.findByIdAndDeletedAtIsNull(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않거나 삭제되었습니다. ID: " + orderId));
+
+        return PaymentConfirmRequestDto.from(payment);
+    }
+
     // TODO: 결제 목록 조회
+
 }
