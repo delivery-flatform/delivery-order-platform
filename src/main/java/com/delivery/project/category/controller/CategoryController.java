@@ -37,8 +37,10 @@ public class CategoryController {
 
     // 카테고리 단건 조회
     @GetMapping("/{id}")
-    public CategoryResponseDto selectCategory(@PathVariable UUID id) {
-        return categoryService.selectCategory(id);
+    public ResponseEntity<ApiResponse<CategoryResponseDto>> selectCategory(@PathVariable UUID id) {
+        CategoryResponseDto response = categoryService.selectCategory(id);
+
+        return ResponseEntity.ok(ApiResponse.success("조회가 완료되었습니다.", response));
     }
 
     // 카테고리 등록

@@ -36,10 +36,9 @@ public class CategoryService {
     }
 
     // 카테고리 단건 조회 (MANAGER+)
-//    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
-    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     public CategoryResponseDto selectCategory(UUID id) {
-        Category category = this.findCategory(id);
+        Category category = findActiveCategory(id);
 
         return CategoryResponseDto.from(category);
     }
@@ -77,5 +76,15 @@ public class CategoryService {
 
     private Category findCategory(UUID id) {
         return categoryRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+    }
+
+    private Category findActiveCategory(UUID id) {
+        Category category = findCategory(id);
+
+        if (category.getDeletedAt() != null) {
+            throw new CustomException(ErrorCode.CATEGORY_ALREADY_DELETED);
+        }
+
+        return category;
     }
 }
