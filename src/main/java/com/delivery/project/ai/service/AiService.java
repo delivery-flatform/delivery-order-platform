@@ -6,7 +6,7 @@ import org.springframework.data.domain.Page;
 
 public interface AiService {
 
-    Page<AiResponseDto> aiSelect(int page, int size, String sortBy, boolean isAsc);
+    Page<AiResponseDto> aiSelect(int page, int size, String sortBy, boolean isAsc, String search);
 
     String aiInsert(AiRequestDto dto);
 

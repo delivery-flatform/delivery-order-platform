@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,18 +34,28 @@ public class AiServiceImpl implements AiService {
 
     // TODO: AI 로그 조회
     @Override
-    public Page<AiResponseDto> aiSelect(int page, int size, String sortBy, boolean isAsc) {
+    @PreAuthorize("hasAnyRole('MASTER','MANAGER')")
+    public Page<AiResponseDto> aiSelect(int page, int size, String sortBy, boolean isAsc, String search) {
 
         Pageable pageable = createPageable(page,size,sortBy,isAsc);
 
-        Page<AiLog> aiLog =  aiLogRepository.findAll(pageable);
-        return aiLog.map(AiResponseDto::new);
+        Page<AiLog> aiLog;
+
+        if(search == null || search.isBlank()){
+            aiLog =  aiLogRepository.findAll(pageable);
+        }else{
+            // 프롬프트나 응답 결과에 검색어가 있으면 값이 나올 수 있게
+            aiLog = aiLogRepository.findByPromptContainingOrResponseContaining(search,search,pageable);
+        }
+
+        return aiLog.map(AiResponseDto::from);
     }
 
     // TODO: 설명 생성 (50자 이하 제한)
     //  config로 분리해서 로직 단순화
     @Override
     @Transactional
+    @PreAuthorize("hasRole('CUSTOMER')")
     public String aiInsert(AiRequestDto dto) {
         String userName = "aa"; // user값 받아와서 수정해줘야함.
 

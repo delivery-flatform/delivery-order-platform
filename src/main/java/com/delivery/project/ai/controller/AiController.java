@@ -18,16 +18,16 @@ public class AiController {
     private final AiServiceImpl aiService;
 
     // TODO: GET  /api/v1/ai/logs        - AI 로그 조회 (MANAGER+)
-    // @PreAuthorize("hasRole('MANAGER','MASTER')")
     @GetMapping("/logs")
     public ResponseEntity<Page<AiResponseDto>> aiSelect(
             @RequestParam("page") int page,
             @RequestParam("size") int size,
             @RequestParam("sortBy") String sortBy,
-            @RequestParam("isAsc") boolean isAsc
+            @RequestParam("isAsc") boolean isAsc,
+            @RequestParam(required = false,value="search") String search
     ) {
         Page<AiResponseDto> result = aiService.aiSelect(
-                page - 1, size, sortBy, isAsc);
+                page - 1, size, sortBy, isAsc, search);
         return ResponseEntity.ok(ApiResponse.success(result).getData());
     }
 
