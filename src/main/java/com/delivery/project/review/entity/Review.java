@@ -1,7 +1,15 @@
 package com.delivery.project.review.entity;
 
+import com.delivery.project.global.exception.CustomException;
+import com.delivery.project.global.exception.ErrorCode;
+import com.delivery.project.order.entity.Order;
+import com.delivery.project.store.entity.Store;
+import com.delivery.project.user.entity.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -17,16 +25,21 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "store_id", nullable = false)
-    private UUID storeId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="store_id", nullable = false)
+    private Store store;
 
-    @Column(name = "order_id", nullable = false)
-    private UUID orderId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="order_id", nullable = false)
+    private Order order;
 
-    @Column(nullable = false, length = 100)
-    private String username;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="username", nullable = false)
+    private User user;
 
     @Column(nullable = false)
+    @Min(1)
+    @Max(5)
     private Short rating;
 
     @Column(columnDefinition = "TEXT")
@@ -49,4 +62,22 @@ public class Review {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
+    public void deleteReview(User user){
+        if(!this.user.equals(user)){
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = user.getUsername();
+    }
+
+    public void updateReview(String content, Short rating, User user){
+        if(!this.user.equals(user)){
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+        this.content = content;
+        this.rating = rating;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = user.getUsername();
+    }
 }
