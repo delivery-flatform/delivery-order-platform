@@ -58,10 +58,11 @@ public class Category {
                 .build();
     }
 
-    public void updateCategory(CategoryUpdateDto requestDto) {
+    public void updateCategory(CategoryUpdateDto requestDto, String updatedBy) {
         this.name = requestDto.getName();
         this.isActive = requestDto.getIsActive();
         this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
     }
 
     public void deleteCategory(String deletedBy) {

@@ -54,8 +54,10 @@ public class CategoryController {
 
     // 카테고리 수정
     @PutMapping("/{id}")
-    public void updateCategory(@PathVariable UUID id, @RequestBody CategoryUpdateDto requestDto) {
-        categoryService.updateCategory(id, requestDto);
+    public ResponseEntity<ApiResponse<CategoryResponseDto>> updateCategory(@AuthenticationPrincipal UserDetailsImpl userDetails, @PathVariable UUID id, @RequestBody CategoryUpdateDto requestDto) {
+        CategoryResponseDto response = categoryService.updateCategory(id, requestDto, userDetails.getUsername());
+
+        return ResponseEntity.ok(ApiResponse.success("카테고리 수정 완료", response));
     }
 
     // 카테고리 삭제

@@ -56,13 +56,14 @@ public class CategoryService {
     }
 
     // 카테고리 수정 (MANAGER+)
-//    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
-    public void updateCategory(UUID id, CategoryUpdateDto requestDto) {
-        Category category = this.findCategory(id);
+    public CategoryResponseDto updateCategory(UUID id, CategoryUpdateDto requestDto, String username) {
+        Category category = findActiveCategory(id);
+        category.updateCategory(requestDto, username);
 
-        // TODO: updatedBy 추가
-        category.updateCategory(requestDto);
+        log.info("카테고리 수정 완료 categoryId={}, username={}", id, username);
+        return CategoryResponseDto.from(category);
     }
 
     // 카테고리 삭제 Soft Delete (MANAGER+)
