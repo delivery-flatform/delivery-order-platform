@@ -1,5 +1,6 @@
 package com.delivery.project.store.entity;
 
+import com.delivery.project.category.entity.Category;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
@@ -16,9 +17,11 @@ public class StoreCategory {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "category_id", nullable = false)
-    private UUID categoryId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
-    @Column(name = "store_id", nullable = false)
-    private UUID storeId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
 }
