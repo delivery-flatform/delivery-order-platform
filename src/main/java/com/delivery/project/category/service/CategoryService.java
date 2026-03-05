@@ -10,15 +10,14 @@ import com.delivery.project.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
+
+import static com.delivery.project.global.util.PageableUtil.createPageable;
 
 @Slf4j
 @Service
@@ -27,24 +26,10 @@ import java.util.UUID;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
-    private static final List<Integer> ALLOWED_SIZES = List.of(10, 30, 50);
-    private static final List<String> ALLOWED_SORTS = List.of("createdAt", "name");
 
     // 카테고리 목록 조회
-//    @PreAuthorize("hasAnyRole('CUSTOMER', 'OWNER', 'MANAGER', 'MASTER')")
-    @Transactional(readOnly = true)
     public Page<CategoryResponseDto> selectCategoryList(int page, int size, String sortBy, boolean isAsc) {
-        if (!ALLOWED_SORTS.contains(sortBy)) {
-            sortBy = "createdAt";
-        }
-        if (!ALLOWED_SIZES.contains(size)) {
-            size = 10;
-        }
-
-        Sort.Direction direction = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Sort sort = Sort.by(direction, sortBy);
-
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = createPageable(page,size,sortBy,isAsc);
         Page<Category> categoryPage = categoryRepository.findAllByDeletedAtIsNull(pageable);
 
         return categoryPage.map(CategoryResponseDto::from);

@@ -24,13 +24,15 @@ public class CategoryController {
 
     // 카테고리 목록 조회
     @GetMapping
-    public Page<CategoryResponseDto> selectCategoryList(
+    public ResponseEntity<ApiResponse<Page<CategoryResponseDto>>> selectCategoryList(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "createdAt") String sortBy,
             @RequestParam(value = "isAsc", defaultValue = "false") boolean isAsc
     ) {
-        return categoryService.selectCategoryList(page, size, sortBy, isAsc);
+        Page<CategoryResponseDto> categoryList = categoryService.selectCategoryList(page, size, sortBy, isAsc);
+
+        return ResponseEntity.ok(ApiResponse.success(categoryList));
     }
 
     // 카테고리 단건 조회
