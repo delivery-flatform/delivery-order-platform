@@ -17,7 +17,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -60,19 +59,16 @@ public class CategoryService {
         return CategoryResponseDto.from(category);
     }
 
-    // 카테고리 등록 (MANAGER+
-//    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    // 카테고리 등록 (MANAGER+)
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
-    public void insertCategory(CategoryRequestDto requestDto) {
-        // TODO: MANAGER 권한 이상만 추가 가능
-        Category category = Category.builder()
-                .name(requestDto.getName())
-                .isActive(true)
-                .createdAt(LocalDateTime.now())
-                .createdBy("MANAGER")
-                .build();
+    public CategoryResponseDto insertCategory(String username, CategoryRequestDto requestDto) {
+        Category category = Category.toEntity(requestDto, username);
+        Category savedCategory = categoryRepository.save(category);
 
-        categoryRepository.save(category);
+        log.info(String.valueOf(category.getId()));
+
+        return CategoryResponseDto.from(savedCategory);
     }
 
     // 카테고리 수정 (MANAGER+)

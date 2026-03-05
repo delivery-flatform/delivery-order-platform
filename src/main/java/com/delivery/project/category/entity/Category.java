@@ -1,5 +1,6 @@
 package com.delivery.project.category.entity;
 
+import com.delivery.project.category.dto.CategoryRequestDto;
 import com.delivery.project.category.dto.CategoryUpdateDto;
 import com.delivery.project.store.entity.StoreCategory;
 import jakarta.persistence.*;
@@ -21,7 +22,7 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 100, unique = true)
     private String name;
 
     @Column(name = "is_active", nullable = false)
@@ -47,6 +48,15 @@ public class Category {
 
     @OneToMany(mappedBy = "category")
     private List<StoreCategory> storeCategoryList = new ArrayList<>();
+
+    public static Category toEntity(CategoryRequestDto requestDto, String username) {
+        return Category.builder()
+                .name(requestDto.getName())
+                .isActive(true)
+                .createdAt(LocalDateTime.now())
+                .createdBy(username)
+                .build();
+    }
 
     public void updateCategory(CategoryUpdateDto requestDto) {
         this.name = requestDto.getName();

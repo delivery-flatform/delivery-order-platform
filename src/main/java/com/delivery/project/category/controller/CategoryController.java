@@ -4,8 +4,13 @@ import com.delivery.project.category.dto.CategoryRequestDto;
 import com.delivery.project.category.dto.CategoryResponseDto;
 import com.delivery.project.category.dto.CategoryUpdateDto;
 import com.delivery.project.category.service.CategoryService;
+import com.delivery.project.global.response.ApiResponse;
+import com.delivery.project.global.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -36,8 +41,11 @@ public class CategoryController {
 
     // 카테고리 등록
     @PostMapping
-    public void insertCategory(@RequestBody CategoryRequestDto requestDto) {
-        categoryService.insertCategory(requestDto);
+    public ResponseEntity<ApiResponse<CategoryResponseDto>> insertCategory(@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestBody CategoryRequestDto requestDto) {
+        CategoryResponseDto response = categoryService.insertCategory(userDetails.getUsername(), requestDto);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(response));
     }
 
     // 카테고리 수정
