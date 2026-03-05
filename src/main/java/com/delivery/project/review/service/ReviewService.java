@@ -2,7 +2,6 @@ package com.delivery.project.review.service;
 
 import com.delivery.project.global.exception.CustomException;
 import com.delivery.project.global.exception.ErrorCode;
-import com.delivery.project.global.util.PageableUtil;
 import com.delivery.project.order.entity.Order;
 import com.delivery.project.order.repository.OrderRepository;
 import com.delivery.project.review.dto.request.ReviewRequestDto;
@@ -12,7 +11,6 @@ import com.delivery.project.review.repository.ReviewRepository;
 import com.delivery.project.store.entity.Store;
 import com.delivery.project.store.repository.StoreRepository;
 import com.delivery.project.user.entity.User;
-import com.delivery.project.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -32,7 +30,6 @@ import java.util.UUID;
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final UserRepository userRepository;
     private final OrderRepository orderRepository;
     private final StoreRepository storeRepository;
 
@@ -60,10 +57,7 @@ public class ReviewService {
 
     // TODO: 리뷰 목록 조회 (유저별)
     @PreAuthorize("hasRole('CUSTOMER')")
-    public Page<ReviewResponseDto> selectReview(int page, int size, String sortBy, boolean isAsc, String search,
-                                                User user) {
-
-        Pageable pageable = PageableUtil.createPageable(page,size,sortBy,isAsc);
+    public Page<ReviewResponseDto> selectReview(Pageable pageable, String search, User user) {
 
         Page<Review> reviewList;
 

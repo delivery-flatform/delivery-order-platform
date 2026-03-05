@@ -2,18 +2,20 @@ package com.delivery.project.review.controller;
 
 import com.delivery.project.global.response.ApiResponse;
 import com.delivery.project.global.security.UserDetailsImpl;
-import com.delivery.project.global.util.PageableUtil;
 import com.delivery.project.review.dto.request.ReviewRequestDto;
 import com.delivery.project.review.dto.response.ReviewResponseDto;
 import com.delivery.project.review.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -22,6 +24,8 @@ import java.util.UUID;
 public class ReviewController {
 
     private final ReviewService reviewService;
+
+    private final List<Integer> allowedSizes = List.of(10, 30, 50);
 
     // TODO: GET    /api/v1/reviews?storeId={id} - 가게별 리뷰 목록 조회
     @GetMapping("/storeId={id}")
@@ -34,7 +38,13 @@ public class ReviewController {
                                                                      String search,
                                                                  @AuthenticationPrincipal UserDetailsImpl userDetails){
 
-        Pageable pageable = PageableUtil.createPageable(page-1,size,sortBy,isAsc);
+        // 페이징 처리 로직
+        int finalSize = allowedSizes.contains(size) ? size : 10;
+
+        Sort.Direction direction = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, sortBy);
+
+        Pageable pageable = PageRequest.of(page - 1, finalSize, sort);
 
         Page<ReviewResponseDto> reviewList = reviewService.selectReview(id,pageable, search, userDetails.getUser());
         return ResponseEntity.ok(ApiResponse.success(reviewList).getData());
@@ -48,7 +58,17 @@ public class ReviewController {
                                                                 @RequestParam(defaultValue = "true",name="isAsc") boolean isAsc,
                                                                 @RequestParam(required = false, value = "search")
                                                                     String search, UserDetailsImpl userDetails){
-        Page<ReviewResponseDto> reviewList = reviewService.selectReview(page-1,size,sortBy, isAsc,search, userDetails.getUser());
+
+        // 페이징 처리 로직
+        int finalSize = allowedSizes.contains(size) ? size : 10;
+
+        Sort.Direction direction = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, sortBy);
+
+        Pageable pageable = PageRequest.of(page - 1, finalSize, sort);
+
+
+        Page<ReviewResponseDto> reviewList = reviewService.selectReview(pageable,search, userDetails.getUser());
 
         return ResponseEntity.ok(ApiResponse.success(reviewList).getData());
     }
