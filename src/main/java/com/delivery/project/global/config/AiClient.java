@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,7 +33,7 @@ public class AiClient {
                 "1.답은 꼭 한가지로만 50자 이하로 대답해줘." +
                 "2. 글자 수 표시나 이런 쓸데없는건 다 제외하고 설명에 대한 답만 해줘.";
 
-        // jemini로 보낼 body
+        // gemini로 보낼 body
         Map<String, Object> body = Map.of(
                 "contents", List.of(
                         Map.of("parts", List.of(

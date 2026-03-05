@@ -24,6 +24,7 @@ public class JwtUtil {
         this.expiration = expiration;
     }
 
+    // 토큰 발급
     public String generateToken(String username, String role) {
         return Jwts.builder()
                 .subject(username)
@@ -34,6 +35,7 @@ public class JwtUtil {
                 .compact();
     }
 
+    // token의 username, role 반환
     public String getUsername(String token) {
         return getClaims(token).getSubject();
     }
@@ -42,6 +44,7 @@ public class JwtUtil {
         return getClaims(token).get("role", String.class);
     }
 
+    // 토큰 검증 예외 처리
     public boolean validateToken(String token) {
         try {
             getClaims(token);
@@ -52,6 +55,7 @@ public class JwtUtil {
         }
     }
 
+    // secret key -> 서명 검증 & 토큰 구조 검증 & exp 검증
     private Claims getClaims(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
