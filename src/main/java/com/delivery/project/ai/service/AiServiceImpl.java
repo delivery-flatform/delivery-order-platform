@@ -12,12 +12,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-
-import static com.delivery.project.global.util.PageableUtil.createPageable;
 
 @Slf4j
 @Service
@@ -35,9 +34,7 @@ public class AiServiceImpl implements AiService {
     // TODO: AI 로그 조회
     @Override
     @PreAuthorize("hasAnyRole('MASTER','MANAGER')")
-    public Page<AiResponseDto> aiSelect(int page, int size, String sortBy, boolean isAsc, String search) {
-
-        Pageable pageable = createPageable(page,size,sortBy,isAsc);
+    public Page<AiResponseDto> aiSelect(Pageable pageable, String search) {
 
         Page<AiLog> aiLog;
 
@@ -55,12 +52,11 @@ public class AiServiceImpl implements AiService {
     //  config로 분리해서 로직 단순화
     @Override
     @Transactional
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public String aiInsert(AiRequestDto dto) {
-        String userName = "aa"; // user값 받아와서 수정해줘야함.
+    @PreAuthorize("hasRole('OWNER')")
+    public String aiInsert(AiRequestDto dto, String username) {
 
         if(!dto.isAiTrue()){
-            throw new CustomException(ErrorCode.NOT_FOUND);
+            throw new CustomException(ErrorCode.FORBIDDEN);
         }
         String responseText = aiClient.response(dto.getRequest());
 
@@ -68,9 +64,9 @@ public class AiServiceImpl implements AiService {
                 .prompt(dto.getRequest())
                 .modelName("gemini")
                 .targetType(dto.getTargetType())
-                .createdBy(userName)
+                .createdBy(username)
                 .createdAt(LocalDateTime.now())
-                .userName(userName)
+                .userName(username)
                 .response(responseText)
                 .build();
 
