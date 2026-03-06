@@ -3,7 +3,9 @@ package com.delivery.project.review.controller;
 import com.delivery.project.global.response.ApiResponse;
 import com.delivery.project.global.security.UserDetailsImpl;
 import com.delivery.project.review.dto.request.ReviewRequestDto;
+import com.delivery.project.review.dto.request.ReviewUpdateRequestDto;
 import com.delivery.project.review.dto.response.ReviewResponseDto;
+import com.delivery.project.review.dto.response.ReviewUpdateResponseDto;
 import com.delivery.project.review.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +35,7 @@ public class ReviewController {
                                                                  @RequestParam(defaultValue = "1",name = "page") int page,
                                                                  @RequestParam(defaultValue = "10",name="size") int size,
                                                                  @RequestParam(defaultValue = "createdAt",name="sortBy") String sortBy,
-                                                                 @RequestParam(defaultValue = "true",name="isAsc") boolean isAsc,
+                                                                 @RequestParam(defaultValue = "false",name="isAsc") boolean isAsc,
                                                                  @RequestParam(required = false, value = "search")
                                                                      String search,
                                                                  @AuthenticationPrincipal UserDetailsImpl userDetails){
@@ -55,9 +57,10 @@ public class ReviewController {
     public ResponseEntity<Page<ReviewResponseDto>> selectReview(@RequestParam(defaultValue = "1",name = "page") int page,
                                                                 @RequestParam(defaultValue = "10",name="size") int size,
                                                                 @RequestParam(defaultValue = "createdAt",name="sortBy") String sortBy,
-                                                                @RequestParam(defaultValue = "true",name="isAsc") boolean isAsc,
+                                                                @RequestParam(defaultValue = "false",name="isAsc") boolean isAsc,
                                                                 @RequestParam(required = false, value = "search")
-                                                                    String search, UserDetailsImpl userDetails){
+                                                                    String search,
+                                                                @AuthenticationPrincipal UserDetailsImpl userDetails){
 
         // 페이징 처리 로직
         int finalSize = allowedSizes.contains(size) ? size : 10;
@@ -76,11 +79,9 @@ public class ReviewController {
     // TODO: POST   /api/v1/reviews              - 리뷰 작성
     @PostMapping
     public ResponseEntity<ReviewResponseDto> createReview(@Valid @RequestBody ReviewRequestDto requestDto,
-                                                          @RequestParam("orderId") UUID orderId,
-                                                          @RequestParam("storeId") UUID storeId,
                                                           @AuthenticationPrincipal UserDetailsImpl userDetails){
 
-        ReviewResponseDto responseDto = reviewService.createReview(requestDto, orderId, storeId, userDetails.getUser());
+        ReviewResponseDto responseDto = reviewService.createReview(requestDto, userDetails.getUser());
 
         return ResponseEntity.ok(ApiResponse.success(responseDto).getData());
 
@@ -88,18 +89,18 @@ public class ReviewController {
 
     // TODO: PUT    /api/v1/reviews/{id}         - 리뷰 수정
     @PutMapping("/{id}")
-    public ResponseEntity<ReviewResponseDto> updateReview(@PathVariable UUID id, @RequestBody ReviewRequestDto dto,
-                                                          UserDetailsImpl userDetails){
-        ReviewResponseDto responseDto = reviewService.updateReview(id,dto, userDetails.getUser());
+    public ResponseEntity<ReviewUpdateResponseDto> updateReview(@PathVariable UUID id, @Valid @RequestBody ReviewUpdateRequestDto dto,
+                                                                            @AuthenticationPrincipal UserDetailsImpl userDetails){
+        ReviewUpdateResponseDto responseDto = reviewService.updateReview(id,dto, userDetails.getUser());
 
         return ResponseEntity.ok(ApiResponse.success(responseDto).getData());
     }
 
     // TODO: DELETE /api/v1/reviews/{id}         - 리뷰 삭제
     @DeleteMapping("/{id}")
-    public ResponseEntity<ReviewResponseDto> deleteReview(@PathVariable UUID id, UserDetailsImpl userDetails){
-        ReviewResponseDto responseDto = reviewService.deleteReview(id,userDetails.getUser());
+    public ResponseEntity<String> deleteReview(@PathVariable UUID id, @AuthenticationPrincipal UserDetailsImpl userDetails){
+        reviewService.deleteReview(id,userDetails.getUser());
 
-        return ResponseEntity.ok(ApiResponse.success(responseDto).getData());
+        return ResponseEntity.ok("삭제되었습니다.");
     }
 }

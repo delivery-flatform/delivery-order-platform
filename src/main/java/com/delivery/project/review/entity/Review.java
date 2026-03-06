@@ -5,6 +5,7 @@ import com.delivery.project.global.exception.ErrorCode;
 import com.delivery.project.order.entity.Order;
 import com.delivery.project.store.entity.Store;
 import com.delivery.project.user.entity.User;
+import com.delivery.project.user.entity.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -64,7 +65,16 @@ public class Review {
     private String deletedBy;
 
     public void deleteReview(User user){
-        if(!this.user.equals(user)){
+        // 사장님이면 삭제 금지
+        if(user.getRole() == UserRole.OWNER){
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        // 관리자거나 작성자가 아닐 때 삭제 금지
+        boolean isAdmin = user.getRole() == UserRole.MANAGER || user.getRole() ==UserRole.MASTER;
+        boolean isUser = this.user.getUsername().equals(user.getUsername());
+
+        if(!isAdmin && !isUser){
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
         this.deletedAt = LocalDateTime.now();
@@ -72,7 +82,7 @@ public class Review {
     }
 
     public void updateReview(String content, Short rating, User user){
-        if(!this.user.equals(user)){
+        if(!this.user.getUsername().equals(user.getUsername())){
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
         this.content = content;

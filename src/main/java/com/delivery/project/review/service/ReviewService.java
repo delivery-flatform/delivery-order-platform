@@ -5,7 +5,9 @@ import com.delivery.project.global.exception.ErrorCode;
 import com.delivery.project.order.entity.Order;
 import com.delivery.project.order.repository.OrderRepository;
 import com.delivery.project.review.dto.request.ReviewRequestDto;
+import com.delivery.project.review.dto.request.ReviewUpdateRequestDto;
 import com.delivery.project.review.dto.response.ReviewResponseDto;
+import com.delivery.project.review.dto.response.ReviewUpdateResponseDto;
 import com.delivery.project.review.entity.Review;
 import com.delivery.project.review.repository.ReviewRepository;
 import com.delivery.project.store.entity.Store;
@@ -52,7 +54,7 @@ public class ReviewService {
             reviewList = reviewRepository.findByStoreIdAndDeletedAtIsNullAndContentContaining(id,search,pageable);
         }
 
-        return reviewList.map(ReviewResponseDto::new);
+        return reviewList.map(ReviewResponseDto::from);
     }
 
     // TODO: 리뷰 목록 조회 (유저별)
@@ -69,27 +71,27 @@ public class ReviewService {
                     findByUserUsernameAndDeletedAtIsNullAndContentContaining(user.getUsername(), search, pageable);
         }
 
-        return reviewList.map(ReviewResponseDto::new);
+        return reviewList.map(ReviewResponseDto::from);
     }
 
     // TODO: 리뷰 작성 (주문 완료 후, rating 1~5)
     @Transactional
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ReviewResponseDto createReview(ReviewRequestDto dto, UUID orderId, UUID storeId, User user) {
+    public ReviewResponseDto createReview(ReviewRequestDto dto, User user) {
 
         String status = "Completed".toUpperCase(Locale.ROOT);
         // 주문 완료 상태인지 확인
-       Order order = orderRepository.findByIdAndStatus(orderId, status).orElseThrow(()->
+       Order order = orderRepository.findByIdAndStatus(dto.getOrderId(), status).orElseThrow(()->
                new CustomException(ErrorCode.REVIEW_NOT_COMPLETED_ORDER)
         );
 
         // 가게 정보 확인
-       Store store = storeRepository.findById(storeId).orElseThrow(() ->
+       Store store = storeRepository.findById(dto.getStoreId()).orElseThrow(() ->
                new CustomException(ErrorCode.STORE_NOT_FOUND)
        );
 
        // 리뷰가 존재하는지 확인
-        if(reviewRepository.existsByOrderId(orderId)){
+        if(reviewRepository.existsByOrderId(dto.getOrderId())){
             throw new CustomException(ErrorCode.DUPLICATE_REVIEW);
         }
 
@@ -110,13 +112,13 @@ public class ReviewService {
 
        Review saveReview = reviewRepository.save(review);
 
-       return new ReviewResponseDto(saveReview);
+       return ReviewResponseDto.from(saveReview);
     }
 
     // TODO: 리뷰 수정 (본인만)
     @Transactional
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ReviewResponseDto updateReview(UUID id, ReviewRequestDto dto, User user) {
+    public ReviewUpdateResponseDto updateReview(UUID id, ReviewUpdateRequestDto dto, User user) {
 
         // 리뷰 존재 확인
         Review review = reviewRepository.findById(id).orElseThrow(() ->
@@ -124,13 +126,13 @@ public class ReviewService {
 
         review.updateReview(dto.getContent(), dto.getRating(),user);
 
-        return new ReviewResponseDto(review);
+        return ReviewUpdateResponseDto.from(review);
     }
 
     // TODO: 리뷰 삭제 Soft Delete
     @Transactional
     @PreAuthorize("hasAnyRole('CUSTOMER','MASTER','MANAGER')")
-    public ReviewResponseDto deleteReview(UUID id, User user) {
+    public void deleteReview(UUID id, User user) {
 
         // 리뷰 존재 확인
         Review review = reviewRepository.findById(id).orElseThrow(() ->
@@ -138,7 +140,6 @@ public class ReviewService {
 
         review.deleteReview(user);
 
-        return new ReviewResponseDto(review);
     }
 
     // TODO : 리뷰 평점 계산 (QueryDSL ? JPQL?)
