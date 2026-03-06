@@ -17,8 +17,9 @@ public class PaymentLog {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "payment_id", nullable = false)
-    private UUID paymentId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_id", nullable = false)
+    private Payment payment;
 
     @Column(name = "payment_method", nullable = false, length = 20)
     private String paymentMethod;
@@ -49,4 +50,5 @@ public class PaymentLog {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
 }
