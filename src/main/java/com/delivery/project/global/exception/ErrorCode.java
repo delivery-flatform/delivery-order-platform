@@ -40,7 +40,7 @@ public enum ErrorCode {
     REGION_NOT_FOUND(HttpStatus.NOT_FOUND, "지역을 찾을 수 없습니다."),
 
     // Category
-    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다.");
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다."), CATEGORY_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "이미 삭제된 카테고리입니다.");
 
     private final HttpStatus status;
     private final String message;
