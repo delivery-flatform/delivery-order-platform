@@ -135,7 +135,7 @@ public class ReviewService {
     public void deleteReview(UUID id, User user) {
 
         // 리뷰 존재 확인
-        Review review = reviewRepository.findById(id).orElseThrow(() ->
+        Review review = reviewRepository.findByIdAndDeletedAtIsNull(id).orElseThrow(()->
                 new CustomException(ErrorCode.REVIEW_NOT_FOUND));
 
         review.deleteReview(user);
