@@ -42,7 +42,7 @@ public class CategoryService {
         Sort.Direction direction = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
         Sort sort = Sort.by(direction, sortBy);
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page - 1, size, sort);
 
         Page<Category> categoryPage = categoryRepository.findAllByDeletedAtIsNull(pageable);
 
