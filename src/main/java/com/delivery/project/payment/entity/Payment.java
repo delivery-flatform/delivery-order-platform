@@ -1,8 +1,11 @@
 package com.delivery.project.payment.entity;
 
+import com.delivery.project.order.entity.Order;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -17,17 +20,20 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "order_id", nullable = false)
-    private UUID orderId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false, length = 20)
-    private String paymentMethod;
+    private PaymentMethod paymentMethod;
 
     @Column(nullable = false)
     private Integer amount;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status;
+    private Status status;
 
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
@@ -52,4 +58,7 @@ public class Payment {
 
     public enum PaymentMethod { CARD }
     public enum Status { PENDING, COMPLETED, FAILED, CANCELLED }
+
+    @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL)
+    private List<PaymentLog> paymentLogs = new ArrayList<>();
 }
