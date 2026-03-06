@@ -4,6 +4,9 @@ import com.delivery.project.order.entity.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -11,6 +14,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
+
+    List<Order> findByCustomerUsernameAndDeletedAtIsNull(String customerUsername);
+
+    Optional<Order> findByIdAndStatus(UUID id, String status);
 
     /**
      * 고객 ID 기반 단순 목록 조회
@@ -71,3 +78,4 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     Optional<Order> findByIdAndDeletedAtIsNull(UUID orderId);
 
 }
+
