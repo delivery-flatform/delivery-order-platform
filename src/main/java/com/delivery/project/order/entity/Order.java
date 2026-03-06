@@ -94,7 +94,7 @@ public class Order {
     private String deletedBy;
 
     public enum Status {
-        PENDING, CONFIRMED, DELIVERING, COMPLETED, CANCELLED
+        READY, PENDING, CONFIRMED, DELIVERING, COMPLETED, CANCELLED
     }
 
     public enum OrderType {
@@ -132,6 +132,11 @@ public class Order {
         boolean isValid = false;
 
         switch (current) {
+            case READY:
+                // 결제가 완료되면 PENDING(주문 대기) 상태로 변경 가능
+                if (next == Status.PENDING || next == Status.CANCELLED) isValid = true;
+                break;
+
             case PENDING:
                 // 대기 중일 때는 접수(CONFIRMED) 또는 취소(CANCELLED)만 가능
                 if (next == Status.CONFIRMED || next == Status.CANCELLED) isValid = true;

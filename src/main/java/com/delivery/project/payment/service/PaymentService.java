@@ -67,21 +67,23 @@ public class PaymentService {
             ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                // [중요] 1. 주문(Order) 상태 업데이트
+                // 주문(Order) 상태 업데이트
                 // dto.getOrderId()는 우리 DB의 주문 UUID입니다.
                 Order order = orderRepository.findById(UUID.fromString(dto.getOrderId()))
                         .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
 
-                // [중요] 2. 결제(Payment) 내역 DB 저장
+                // 결제(Payment) 내역 DB 저장
                 Payment payment = Payment.builder()
                         .orderId(order.getId())
-                        .paymentMethod(dto.getPaymentKey())
+                        .paymentMethod(String.valueOf(Payment.PaymentMethod.CARD))
+                        .paymentKey(dto.getPaymentKey())
                         .amount(dto.getAmount())
-                        .status("DONE") // 토스 승인 완료 상태
+                        .status(Payment.Status.COMPLETED.name()) // 토스 승인 완료 상태
                         .createdAt(LocalDateTime.now())
                         .createdBy(order.getCustomerUsername())
                         .build();
                 paymentRepository.save(payment);
+                orderRepository.save(order);
 
                 log.info("결제 승인 및 DB 저장 성공: orderId={}", dto.getOrderId());
                 return true;

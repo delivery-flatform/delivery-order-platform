@@ -67,19 +67,19 @@
 </head>
 <body>
 <div class="container">
-    <h2>배달 주문 결제 (사전 생성 방식)</h2>
+    <h2>배달 주문 결제</h2>
 
-    <label for="userId">고객 이름 (DB username)</label>
+    <label for="userId">고객 이름</label>
     <input type="text" id="userId" value="갈형준@갈형준">
 
-    <label for="product_names">상품 리스트</label>
-    <p class="info-text">여러 상품은 쉼표(,)로 구분해 주세요.</p>
-    <input type="text" id="product_names" value="돼지고기 김치찌개, 계란말이">
+    <label for="storeName">가게 이름</label>
+    <input type="text" id="storeName" value="민솔네 김치찌개">
 
-    <label for="amount">최종 결제 금액 (검증용)</label>
-    <input type="number" id="amount" value="16000">
+    <label for="product_names">상품 및 수량 선택</label>
+    <p class="info-text">예: 돼지고기 김치찌개:1, 계란말이:2 (쉼표 구분)</p>
+    <input type="text" id="product_names" value="돼지고기 김치찌개:1, 계란말이:1">
 
-    <button id="payment-button">결제하기</button>
+    <button id="payment-button">주문 생성 및 결제하기</button>
 </div>
 
 <script>
@@ -88,24 +88,32 @@
 
     document.getElementById("payment-button").addEventListener("click", async () => {
         const userId = document.getElementById("userId").value;
+        const storeName = document.getElementById("storeName").value;
         const productNameInput = document.getElementById("product_names").value;
-        const amount = Number(document.getElementById("amount").value);
 
-        // 1. 쉼표로 구분된 문자열을 배열로 변환 (양 끝 공백 제거)
-        const productNameList = productNameInput.split(',').map(name => name.trim());
+        if (!storeName) return alert("가게 이름을 입력해주세요.");
 
-        // 2. 백엔드 DTO 구조에 맞게 데이터 구성
+        // 1. "상품명:수량" 파싱
+        const parsedItems = productNameInput.split(',').map(item => {
+            const [name, quantity] = item.split(':').map(s => s.trim());
+            return {name: name, quantity: parseInt(quantity) || 1};
+        });
+
+        // 2. 서버 DTO 구조(OrderRequestDto)에 맞게 데이터 재구성
+        // 서비스 로직에서 이름으로 상품 정보를 조회하므로 productNameList가 매우 중요합니다.
         const orderRequestDto = {
-            storeId: "ff0c6de8-1855-11f1-b00b-027838fb21f5",
+            storeName: storeName,
             address: "서울시 강남구 역삼동 101",
             comment: "문 앞에 두고 벨 눌러주세요.",
-            productNameList: productNameList, // List<String> 대응
-            amount: amount // 서버 금액 검증용
+            productNameList: parsedItems.map(item => item.name), // ["돼지고기 김치찌개", "계란말이"]
+            products: parsedItems.map(item => ({
+                productId: null, // 현재 단계에서 UUID를 모르면 null 전송 (백엔드에서 처리)
+                quantity: item.quantity
+            }))
         };
 
         try {
-            // 3. 백엔드 OrderController에 주문 사전 생성 요청
-            // 엔드포인트를 /api/v1/orders로 수정 (이전 답변의 컨트롤러 기준)
+            // 3. 백엔드 주문 생성 호출
             const preOrderResponse = await fetch(`/api/v1/orders/order?userId=${encodeURIComponent(userId)}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -113,34 +121,30 @@
             });
 
             const result = await preOrderResponse.json();
+            if (!preOrderResponse.ok) throw new Error(result.message || "주문 생성 실패");
 
-            if (!preOrderResponse.ok) {
-                throw new Error(result.message || "주문 생성에 실패했습니다.");
-            }
+            // 4. 서버 응답 데이터 추출 (성공 시)
+            const {orderId, totalPrice} = result.data;
+            const orderName = parsedItems.length > 1
+                ? `${parsedItems[0].name} 외 ${parsedItems.length - 1}건`
+                : parsedItems[0].name;
 
-            // 4. 서버 응답 데이터에서 생성된 주문 UUID 추출
-            // ApiResponse<OrderResponseDto> 구조이므로 result.data.id 접근
-            const dbOrderId = result.data.orderId;
-
-            // 5. 토스 결제창 띄우기
             const payment = tossPayments.payment({
                 customerKey: "user_" + Math.random().toString(36).substring(2, 10),
             });
 
+            // 5. 토스 결제 요청
             await payment.requestPayment({
                 method: "CARD",
-                amount: {currency: "KRW", value: amount},
-                orderId: dbOrderId, // ★ 서버에서 받은 UUID를 그대로 전달 (매우 중요)
-                orderName: productNameList.length > 1
-                    ? `${productNameList[0]} 외 ${productNameList.length - 1}건`
-                    : productNameList[0],
+                amount: {currency: "KRW", value: totalPrice},
+                orderId: orderId,
+                orderName: orderName,
                 successUrl: `${window.location.origin}/payment/success.html`,
                 failUrl: `${window.location.origin}/payment/fail.html`,
                 customerName: userId
             });
 
         } catch (error) {
-            console.error("결제 프로세스 실패:", error);
             alert("에러 발생: " + error.message);
         }
     });

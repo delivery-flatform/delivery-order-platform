@@ -24,6 +24,9 @@ public class Payment {
     @Column(name = "payment_method", nullable = false, length = 100)
     private String paymentMethod;
 
+    @Column(name = "paymentKey", nullable = false)
+    private String paymentKey;
+
     @Column(nullable = false)
     private Integer amount;
 

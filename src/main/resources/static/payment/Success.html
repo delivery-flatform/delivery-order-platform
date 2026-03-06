@@ -49,10 +49,9 @@
                 body: JSON.stringify(requestData),
             });
 
-            const isSuccess = await response.json();
+            const result = await response.json();
 
-            if (isSuccess === true) {
-                // 승인 성공 시 UI 변경
+            if (result.data === true) {
                 document.getElementById("loading-img").src = "https://static.toss.im/illusts/check-blue-spot-ending-1.png";
                 document.getElementById("status-text").innerText = "결제가 완료되었습니다!";
                 document.getElementById("info").style.display = "block";
@@ -62,7 +61,8 @@
                 document.getElementById("amount").innerText = amount;
                 document.getElementById("paymentKey").innerText = paymentKey;
             } else {
-                alert("결제 승인에 실패했습니다. 관리자에게 문의하세요.");
+                // 실패 시 서버가 보낸 메시지를 띄워주면 디버깅이 더 쉽습니다.
+                alert(result.message || "결제 승인에 실패했습니다. 관리자에게 문의하세요.");
                 window.location.href = "/payment/fail.html";
             }
         } catch (error) {

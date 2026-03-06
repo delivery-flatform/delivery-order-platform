@@ -9,6 +9,8 @@ import com.delivery.project.order.repository.OrderItemRepository;
 import com.delivery.project.order.repository.OrderRepository;
 import com.delivery.project.product.entity.Product;
 import com.delivery.project.product.repository.ProductRepository;
+import com.delivery.project.store.entity.Store;
+import com.delivery.project.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,8 @@ public class OrderService {
     private ProductRepository productRepository;
     @Autowired
     private OrderItemRepository orderItemRepository;
+    @Autowired
+    private StoreRepository storeRepository;
 
     // TODO: 주문 전체 조회
     //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER','CUSTOMER')")
@@ -59,7 +63,7 @@ public class OrderService {
                     dto.getStoreId(),
                     dto.getStatus(),
                     dto.getProductName(),
-                    dto.getMinAmount(), // DTO 필드명에 맞춰 수정
+                    dto.getMinAmount(),
                     dto.getMaxAmount(),
                     pageable
             ).map(OrderResponseDto::from);
@@ -89,11 +93,15 @@ public class OrderService {
 
     // TODO: 주문 생성 (이때는 @Transactional을 붙여야 함)
     @Transactional
+    //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'CUSTOMER')")
     public OrderResponseDto insertOrder(String username, OrderRequestDto dto) {
+        // 가게 이름으로 Store 엔티티 조회
+        String storeName = dto.getStoreName();
+        Store store = storeRepository.findByNameAndDeletedAtIsNull(storeName)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 가게입니다: " + storeName));
+
         // 상품 정보 조회
         List<String> requestNames = dto.getProductNameList();
-
-        // 상품명으로 한 번의 쿼리로 모든 상품 정보 조회
         List<Product> foundProducts = productRepository.findAllByNameInAndDeletedAtIsNull(requestNames);
 
         //요청한 상품 수와 DB에서 찾은 상품 수가 다르면 에러 처리
@@ -102,25 +110,27 @@ public class OrderService {
         }
 
         // 상품 정보를 Map으로 변환 (이름 -> Product 객체)하여 매핑 속도 최적화
-        Map<String, Product> productMap = foundProducts.stream()
+        Map<String, Product> productMapByName = foundProducts.stream()
                 .collect(Collectors.toMap(Product::getName, p -> p));
 
         // 총 금액 계산
-        int calculatedTotalAmount = foundProducts.stream()
-                .mapToInt(Product::getPrice)
-                .sum();
+        int calculatedTotalAmount = 0;
+        for (int i = 0; i < requestNames.size(); i++) {
+            String name = requestNames.get(i);
+            Integer quantity = dto.getProducts().get(i).getQuantity();
+            Product p = productMapByName.get(name);
+            if (p == null) throw new IllegalArgumentException("상품 매칭 실패: " + name);
+            calculatedTotalAmount += (p.getPrice() * quantity);
+        }
 
-        // 리스트 중 첫번재 상품을 대표로 저장
-        UUID representativeProductId = foundProducts.get(0).getId();
-
-        // 3. [FIRST] p_order 테이블 먼저 생성 및 저장
+        // p_order 테이블 먼저 생성 및 저장
         // ID가 외래키이므로 부모인 Order가 먼저 DB에 들어가야 합니다.
         Order order = Order.builder()
                 .customerUsername(username)
-                .storeId(dto.getStoreId())
-                .productId(representativeProductId)
+                .storeId(store.getId()) // 이름으로 찾은 실제 Store UUID 저장
+                .productId(foundProducts.get(0).getId()) // 대표 상품 ID
                 .totalPrice(calculatedTotalAmount)
-                .status(Order.Status.PENDING)
+                .status(Order.Status.READY)
                 .deliveryAddress(dto.getAddress())
                 .requestNote(dto.getComment())
                 .orderType("ONLINE")
@@ -128,20 +138,24 @@ public class OrderService {
                 .createdBy(username)
                 .build();
 
-        // 여기서 save를 호출하면 JPA가 객체에 UUID(id)를 할당합니다.
         Order savedOrder = orderRepository.save(order);
 
         // p_order_item 리스트 생성 (발급된 order_id 사용)
-        List<OrderItem> orderItems = foundProducts.stream()
-                .map(product -> OrderItem.builder()
-                        .orderId(savedOrder.getId())
-                        .productName(product.getName())
-                        .productPrice(product.getPrice())
-                        .quantity(1) // 현재는 기본 1개로 설정 (필요 시 DTO에서 수량 매핑 가능)
-                        .createdAt(LocalDateTime.now())
-                        .createdBy(username)
-                        .build())
-                .toList();
+        List<OrderItem> orderItems = new java.util.ArrayList<>();
+        for (int i = 0; i < requestNames.size(); i++) {
+            String name = requestNames.get(i);
+            Integer quantity = dto.getProducts().get(i).getQuantity();
+            Product p = productMapByName.get(name);
+
+            orderItems.add(OrderItem.builder()
+                    .orderId(savedOrder.getId())
+                    .productName(p.getName())
+                    .productPrice(p.getPrice())
+                    .quantity(quantity)
+                    .createdAt(LocalDateTime.now())
+                    .createdBy(username)
+                    .build());
+        }
 
         // 자식 테이블들 저장
         orderItemRepository.saveAll(orderItems);

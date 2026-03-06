@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,11 +28,15 @@ public class PaymentController {
 
     // TODO: POST /api/v1/payments          - 결제 처리
     @PostMapping("/confirm")
-    @Operation(summary = "결제 처리", description = "결제 요청이 들어오면 데이터 저장후 저장이 완료되었다고 리턴해 줍니다.")
-    public ResponseEntity<Boolean> insertPayment(@RequestBody PaymentConfirmRequestDto dto) {
-
+    public ResponseEntity<ApiResponse<Boolean>> insertPayment(@RequestBody PaymentConfirmRequestDto dto) {
         boolean isSuccess = paymentService.selectPaymentConfirm(dto);
-        return ResponseEntity.ok(isSuccess);
+
+        // 성공/실패 여부에 따라 공통 응답 객체에 담아서 반환
+        if (isSuccess) {
+            return ResponseEntity.ok(ApiResponse.success(true));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail("결제 승인 실패"));
+        }
     }
 
     // TODO: GET  /api/v1/payments/{id}     - 결제 단건 조회
