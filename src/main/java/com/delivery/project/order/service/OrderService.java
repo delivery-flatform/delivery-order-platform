@@ -7,6 +7,7 @@ import com.delivery.project.order.entity.Order;
 import com.delivery.project.order.entity.OrderItem;
 import com.delivery.project.order.repository.OrderItemRepository;
 import com.delivery.project.order.repository.OrderRepository;
+import com.delivery.project.payment.service.PaymentService;
 import com.delivery.project.product.entity.Product;
 import com.delivery.project.product.repository.ProductRepository;
 import com.delivery.project.store.entity.Store;
@@ -39,6 +40,8 @@ public class OrderService {
     private OrderItemRepository orderItemRepository;
     @Autowired
     private StoreRepository storeRepository;
+    @Autowired
+    private PaymentService paymentService;
 
     // TODO: 주문 전체 조회
     //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER','CUSTOMER')")
@@ -179,7 +182,7 @@ public class OrderService {
         }
 
         // 이미 취소되었거나 배달 중인지 확인
-        if (order.getStatus() != Order.Status.PENDING) {
+        if (!String.valueOf(order.getStatus()).equals("PENDING")) {
             throw new IllegalArgumentException("이미 처리 중이거나 취소된 주문은 상태를 변경할 수 없습니다.");
         }
 
@@ -191,8 +194,15 @@ public class OrderService {
             throw new IllegalArgumentException("주문 후 5분이 경과하여 취소가 불가능합니다. (경과 시간: " + minutesPassed + "분)");
         }
 
+        boolean isCancelled = paymentService.deletePayment(orderId, username);
+
+        if (!isCancelled) {
+            throw new RuntimeException("결제사 환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        }
+
         // 상태 변경
         order.cancel();
+        orderRepository.save(order);
 
         return OrderResponseDto.from(order);
     }

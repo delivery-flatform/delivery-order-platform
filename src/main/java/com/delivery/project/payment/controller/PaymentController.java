@@ -28,6 +28,7 @@ public class PaymentController {
 
     // TODO: POST /api/v1/payments          - 결제 처리
     @PostMapping("/confirm")
+    @Operation(summary = "결제 처리", description = "주문을 확인 결제하고 결재 정보 저장 및 주문 상태 변경")
     public ResponseEntity<ApiResponse<Boolean>> insertPayment(@RequestBody PaymentConfirmRequestDto dto) {
         boolean isSuccess = paymentService.selectPaymentConfirm(dto);
 

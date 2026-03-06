@@ -17,4 +17,6 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     @Query("SELECT p FROM Payment p JOIN Order o ON p.orderId = o.id " +
             "WHERE o.customerUsername= :username AND p.deletedAt IS NULL")
     Page<Payment> findAllByUsername(@Param("username") String username, Pageable pageable);
+
+    Optional<Payment> findByOrderId(UUID orderId);
 }

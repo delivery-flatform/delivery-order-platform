@@ -83,6 +83,9 @@ public class PaymentService {
                         .createdBy(order.getCustomerUsername())
                         .build();
                 paymentRepository.save(payment);
+
+                // 결제 완료 상태로 변경
+                order.updateStatus(Order.Status.PENDING, order.getCustomerUsername());
                 orderRepository.save(order);
 
                 log.info("결제 승인 및 DB 저장 성공: orderId={}", dto.getOrderId());
@@ -109,5 +112,40 @@ public class PaymentService {
         Page<Payment> payments = paymentRepository.findAllByUsername(username, pageable);
 
         return payments.map(PaymentResponseDto::fromEntity);
+    }
+
+    // TODO: 결제 취소
+    @Transactional
+    public boolean deletePayment(UUID orderId, String username) {
+        // 해당 주문의 결제 내역 조회 (paymentKey가 필요함)
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("결제 내역을 찾을 수 없습니다."));
+
+        String url = "https://api.tosspayments.com/v1/payments/" + payment.getPaymentKey() + "/cancel";
+
+        HttpHeaders headers = new HttpHeaders();
+        String auth = TOSS_SECRET_KEY.trim() + ":";
+        String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+        headers.set("Authorization", "Basic " + encodedAuth);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("cancelReason", "사용자 단순 변심"); // 토스페이 취소시 취소 사유가 필수값
+
+        try {
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(params, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                payment.updateStatus(Payment.Status.CANCELLED.name(), username);
+
+                log.info("토스 결제 취소 성공: orderId={}", orderId);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            log.error("토스 결제 취소 실패: {}", e.getMessage());
+            throw new RuntimeException("결제 취소 중 오류가 발생했습니다.");
+        }
     }
 }
