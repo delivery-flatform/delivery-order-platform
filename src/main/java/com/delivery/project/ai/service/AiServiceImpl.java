@@ -35,9 +35,6 @@ public class AiServiceImpl implements AiService {
     @Override
     @PreAuthorize("hasAnyRole('MASTER','MANAGER')")
     public Page<AiResponseDto> aiSelect(Pageable pageable, String search) {
-        System.out.println(SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getAuthorities());
 
         Page<AiLog> aiLog;
 
@@ -55,7 +52,7 @@ public class AiServiceImpl implements AiService {
     //  config로 분리해서 로직 단순화
     @Override
     @Transactional
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasRole('OWENR')")
     public String aiInsert(AiRequestDto dto, String username) {
 
         if(!dto.isAiTrue()){

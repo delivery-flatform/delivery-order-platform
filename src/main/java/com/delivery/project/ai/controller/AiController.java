@@ -32,7 +32,7 @@ public class AiController {
             @RequestParam(defaultValue = "1",name = "page") int page,
             @RequestParam(defaultValue = "10",name="size") int size,
             @RequestParam(defaultValue = "createdAt",name="sortBy") String sortBy,
-            @RequestParam(defaultValue = "true",name="isAsc") boolean isAsc,
+            @RequestParam(defaultValue = "false",name="isAsc") boolean isAsc,
             @RequestParam(required = false, value = "search") String search
     ) {
         // 페이징 처리 로직
