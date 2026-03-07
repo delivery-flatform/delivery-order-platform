@@ -16,6 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -58,7 +60,18 @@ public class StoreService {
     }
 
     // TODO: 가게 수정 (OWNER 본인 or MANAGER+)
+
     // TODO: 가게 삭제 Soft Delete (MANAGER+)
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    @Transactional
+    public void deleteStore(UUID id, String username) {
+        Store store = findStore(id);
+        store.delete(username);
 
+        log.info("가게 삭제 완료 storeId={}, ownername={}", id, store.getUser().getUsername());
+    }
 
+    private Store findStore(UUID id) {
+        return storeRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
+    }
 }

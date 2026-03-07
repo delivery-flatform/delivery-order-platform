@@ -83,4 +83,9 @@ public class Store {
                     .createdBy(createdBy)
                     .build();
     }
+
+    public void delete(String username) {
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = username;
+    }
 }

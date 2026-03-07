@@ -9,10 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/stores")
@@ -34,5 +33,13 @@ public class StoreController {
         StoreResponseDto store = storeService.insertStore(requestDto, userDetails.getUsername());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(store));
+    }
+
+    // 가게 삭제
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteStore(@PathVariable UUID id,
+                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        storeService.deleteStore(id, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("가게가 삭제되었습니다.", null));
     }
 }
