@@ -99,4 +99,10 @@ public class Store {
         this.updatedAt = LocalDateTime.now();
         this.updatedBy = username;
     }
+
+    public void updateStatus(boolean isOpen, String username) {
+        this.isOpen = isOpen;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = username;
+    }
 }

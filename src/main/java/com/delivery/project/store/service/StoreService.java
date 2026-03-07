@@ -66,16 +66,7 @@ public class StoreService {
     @Transactional
     public StoreResponseDto updateStore(UUID id, StoreUpdateRequestDto requestDto, String username) {
         Store store = findActiveStore(id);
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isOwner = store.getUser().getUsername().equals(username);
-        boolean isManagerOrMaster =
-                authentication.getAuthorities().stream()
-                        .anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER")
-                                || a.getAuthority().equals("ROLE_MASTER"));
-        if (!isOwner && !isManagerOrMaster) {
-            throw new CustomException(ErrorCode.FORBIDDEN);
-        }
+        validateStoreUpdatePermission(store, username);
 
         store.update(requestDto, username);
 
@@ -84,8 +75,20 @@ public class StoreService {
         return StoreResponseDto.from(store);
     }
 
-    // 가게 삭제 Soft Delete (MANAGER+)
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER')")
+    @Transactional
+    public StoreResponseDto updateStoreStatus(UUID id, boolean isOpen, String username) {
+        Store store = findActiveStore(id);
+        validateStoreUpdatePermission(store, username);
 
+        store.updateStatus(isOpen, username);
+
+        log.info("가게 상태 변경 - storeId: {}, updatedBy: {}", id, username);
+
+        return StoreResponseDto.from(store);
+    }
+
+    // 가게 삭제 Soft Delete (MANAGER+)
     @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
     public void deleteStore(UUID id, String username) {
@@ -107,5 +110,19 @@ public class StoreService {
         }
 
         return store;
+    }
+
+    private void validateStoreUpdatePermission(Store store, String username) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        boolean isOwner = store.getUser().getUsername().equals(username);
+        boolean isManagerOrMaster =
+                authentication.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER")
+                                || a.getAuthority().equals("ROLE_MASTER"));
+
+        if (!isOwner && !isManagerOrMaster) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
     }
 }

@@ -48,6 +48,18 @@ public class StoreController {
         return ResponseEntity.ok(ApiResponse.success("가게가 수정되었습니다.", store));
     }
 
+    // 가게 영업상태 변경
+    @PutMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<StoreResponseDto>> updateStoreStatus(
+            @PathVariable UUID id,
+            @RequestParam boolean isOpen,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        StoreResponseDto response = storeService.updateStoreStatus(id, isOpen, userDetails.getUsername());
+
+        return ResponseEntity.ok(ApiResponse.success("가게 상태 변경되었습니다.", response));
+    }
+
     // 가게 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteStore(@PathVariable UUID id,
