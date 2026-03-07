@@ -3,6 +3,7 @@ package com.delivery.project.store.controller;
 import com.delivery.project.global.response.ApiResponse;
 import com.delivery.project.global.security.UserDetailsImpl;
 import com.delivery.project.store.dto.request.StoreRequestDto;
+import com.delivery.project.store.dto.request.StoreUpdateRequestDto;
 import com.delivery.project.store.dto.response.StoreResponseDto;
 import com.delivery.project.store.service.StoreService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,18 @@ public class StoreController {
         StoreResponseDto store = storeService.insertStore(requestDto, userDetails.getUsername());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(store));
+    }
+
+    // 가게 수정
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<StoreResponseDto>> updateStore(
+            @PathVariable UUID id,
+            @RequestBody StoreUpdateRequestDto requestDto,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        StoreResponseDto store = storeService.updateStore(id, requestDto, userDetails.getUsername());
+
+        return ResponseEntity.ok(ApiResponse.success("가게가 수정되었습니다.", store));
     }
 
     // 가게 삭제

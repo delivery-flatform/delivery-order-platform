@@ -2,6 +2,7 @@ package com.delivery.project.store.entity;
 
 import com.delivery.project.region.entity.Region;
 import com.delivery.project.store.dto.request.StoreRequestDto;
+import com.delivery.project.store.dto.request.StoreUpdateRequestDto;
 import com.delivery.project.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -87,5 +88,15 @@ public class Store {
     public void delete(String username) {
         this.deletedAt = LocalDateTime.now();
         this.deletedBy = username;
+    }
+
+    public void update(StoreUpdateRequestDto requestDto, String username) {
+        this.name = requestDto.getStoreName();
+        this.description = requestDto.getDescription();
+        this.phone = requestDto.getPhone();
+        this.address = requestDto.getAddress();
+        this.minOrderPrice = requestDto.getMinOrderPrice();
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = username;
     }
 }
