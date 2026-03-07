@@ -47,7 +47,12 @@ public class StoreService {
 
         Store store = Store.create(ownerUser, region, requestDto, createdUser.getUsername());
 
-        storeRepository.save(store);
+        Store savedStore = storeRepository.save(store);
+
+        log.info("가게 등록 완료 storeId={}, storeName={}, ownername={}",
+                savedStore.getId(),
+                savedStore.getName(),
+                savedStore.getUser().getUsername());
 
         return StoreResponseDto.from(store);
     }
