@@ -2,6 +2,7 @@ package com.delivery.project.store.controller;
 
 import com.delivery.project.global.response.ApiResponse;
 import com.delivery.project.global.security.UserDetailsImpl;
+import com.delivery.project.store.dto.request.StoreCategoryRequestDto;
 import com.delivery.project.store.dto.request.StoreRequestDto;
 import com.delivery.project.store.dto.request.StoreUpdateRequestDto;
 import com.delivery.project.store.dto.response.StoreResponseDto;
@@ -66,5 +67,18 @@ public class StoreController {
                                                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
         storeService.deleteStore(id, userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success("가게가 삭제되었습니다.", null));
+    }
+
+    // 카테고리 등록
+    @PostMapping("/{storeId}/categories")
+    public ResponseEntity<ApiResponse<Void>> addCategory(
+            @PathVariable UUID storeId,
+            @RequestBody StoreCategoryRequestDto requestDto,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        storeService.addCategories(storeId, requestDto.getCategoryIds(), userDetails.getUsername());
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("카테고리가 추가되었습니다.", null));
     }
 }

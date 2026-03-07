@@ -1,5 +1,7 @@
 package com.delivery.project.store.service;
 
+import com.delivery.project.category.entity.Category;
+import com.delivery.project.category.repository.CategoryRepository;
 import com.delivery.project.global.exception.CustomException;
 import com.delivery.project.global.exception.ErrorCode;
 import com.delivery.project.region.entity.Region;
@@ -8,6 +10,8 @@ import com.delivery.project.store.dto.request.StoreRequestDto;
 import com.delivery.project.store.dto.request.StoreUpdateRequestDto;
 import com.delivery.project.store.dto.response.StoreResponseDto;
 import com.delivery.project.store.entity.Store;
+import com.delivery.project.store.entity.StoreCategory;
+import com.delivery.project.store.repository.StoreCategoryRepository;
 import com.delivery.project.store.repository.StoreRepository;
 import com.delivery.project.user.entity.User;
 import com.delivery.project.user.repository.UserRepository;
@@ -19,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -30,6 +35,8 @@ public class StoreService {
     private final StoreRepository storeRepository;
     private final UserRepository userRepository;
     private final RegionRepository regionRepository;
+    private final CategoryRepository categoryRepository;
+    private final StoreCategoryRepository storeCategoryRepository;
 
     // TODO: 가게 목록 조회 (페이징, 검색)
     // TODO: 가게 단건 조회 (평점 평균 포함)
@@ -98,6 +105,30 @@ public class StoreService {
         log.info("가게 삭제 완료 storeId={}, ownername={}", id, store.getUser().getUsername());
     }
 
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER')")
+    @Transactional
+    public void addCategories(UUID storeId, List<UUID> categoryIds, String username) {
+        // 요청 중복 제거
+        categoryIds = categoryIds.stream().distinct().toList();
+
+        Store store = findActiveStore(storeId);
+        validateStoreUpdatePermission(store, username);
+
+        List<Category> categories = categoryRepository.findAllById(categoryIds);
+
+        for (Category category : categories) {
+            boolean exists = storeCategoryRepository
+                    .existsByStore_IdAndCategory_Id(storeId, category.getId());
+
+            if (!exists) {
+                StoreCategory storeCategory = StoreCategory.create(store, category);
+                storeCategoryRepository.save(storeCategory);
+            }
+        }
+        
+        log.info("가게 카테고리 등록 완료 storeId={}", storeId);
+    }
+
     private Store findStore(UUID id) {
         return storeRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
     }
@@ -118,8 +149,10 @@ public class StoreService {
         boolean isOwner = store.getUser().getUsername().equals(username);
         boolean isManagerOrMaster =
                 authentication.getAuthorities().stream()
-                        .anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER")
-                                || a.getAuthority().equals("ROLE_MASTER"));
+                        .anyMatch(a ->
+                                a.getAuthority().equals("ROLE_MANAGER") ||
+                                a.getAuthority().equals("ROLE_MASTER")
+                        );
 
         if (!isOwner && !isManagerOrMaster) {
             throw new CustomException(ErrorCode.FORBIDDEN);
