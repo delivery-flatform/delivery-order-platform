@@ -81,4 +81,17 @@ public class StoreController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("카테고리가 추가되었습니다.", null));
     }
+
+    // 카테고리 삭제
+    @DeleteMapping("/{storeId}/categories")
+    public ResponseEntity<ApiResponse<Void>> removeCategories(
+            @PathVariable UUID storeId,
+            @RequestBody StoreCategoryRequestDto requestDto,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+
+        storeService.removeCategories(storeId, requestDto.getCategoryIds(), userDetails.getUsername());
+
+        return ResponseEntity.ok(ApiResponse.success("카테고리가 삭제되었습니다.", null));
+    }
 }

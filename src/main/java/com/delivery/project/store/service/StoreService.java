@@ -129,6 +129,23 @@ public class StoreService {
         log.info("가게 카테고리 등록 완료 storeId={}", storeId);
     }
 
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER')")
+    @Transactional
+    public void removeCategories(UUID storeId, List<UUID> categoryIds, String username) {
+        Store store = findActiveStore(storeId);
+        validateStoreUpdatePermission(store, username);
+
+        for (UUID categoryId : categoryIds) {
+            StoreCategory storeCategory =
+                    storeCategoryRepository.findByStoreIdAndCategoryId(storeId, categoryId)
+                            .orElseThrow(() -> new CustomException(ErrorCode.STORE_CATEGORY_NOT_FOUND));
+
+            storeCategoryRepository.delete(storeCategory);
+        }
+
+        log.info("가게 카테고리 삭제 완료 storeId={}", storeId);
+    }
+
     private Store findStore(UUID id) {
         return storeRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
     }
