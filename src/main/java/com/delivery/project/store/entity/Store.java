@@ -1,5 +1,8 @@
 package com.delivery.project.store.entity;
 
+import com.delivery.project.region.entity.Region;
+import com.delivery.project.store.dto.request.StoreRequestDto;
+import com.delivery.project.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -19,11 +22,13 @@ public class Store {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "owner_username", nullable = false, length = 100)
-    private String ownerUsername;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_username", nullable = false)
+    private User user;
 
-    @Column(name = "region_id", nullable = false)
-    private UUID regionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "region_id", nullable = false)
+    private Region region;
 
     @Column(nullable = false, length = 255)
     private String name;
@@ -63,4 +68,19 @@ public class Store {
 
     @OneToMany(mappedBy = "store")
     private List<StoreCategory> storeCategoryList = new ArrayList<>();
+
+    public static Store create(User user, Region region, StoreRequestDto requestDto, String createdBy) {
+            return Store.builder()
+                    .user(user)
+                    .region(region)
+                    .name(requestDto.getStoreName())
+                    .description(requestDto.getDescription())
+                    .phone(requestDto.getPhone())
+                    .address(requestDto.getAddress())
+                    .minOrderPrice(requestDto.getMinOrderPrice())
+                    .isOpen(true)
+                    .createdAt(LocalDateTime.now())
+                    .createdBy(createdBy)
+                    .build();
+    }
 }
