@@ -19,7 +19,7 @@ public class ReviewResponseDto {
     private short rating;
     private String content;
     private LocalDateTime createdAt;
-
+    private boolean isDeleted;
     public static ReviewResponseDto from(Review review){
         return ReviewResponseDto.builder()
                 .storeId(review.getStore().getId())
@@ -28,6 +28,7 @@ public class ReviewResponseDto {
                 .content(review.getContent())
                 .rating(review.getRating())
                 .createdAt(review.getCreatedAt())
+                .isDeleted(review.getDeletedAt() != null)
                 .build();
     }
 }

@@ -13,6 +13,7 @@ import com.delivery.project.review.repository.ReviewRepository;
 import com.delivery.project.store.entity.Store;
 import com.delivery.project.store.repository.StoreRepository;
 import com.delivery.project.user.entity.User;
+import com.delivery.project.user.entity.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -58,17 +59,25 @@ public class ReviewService {
     }
 
     // TODO: 리뷰 목록 조회 (유저별)
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','MASTER','MANAGER')")
     public Page<ReviewResponseDto> selectReview(Pageable pageable, String search, User user) {
 
         Page<Review> reviewList;
 
-        if(search == null){
-            // reviewRepository.findByUserUserNameAndDeletedAtisNull(user, pageable);
-            reviewList = reviewRepository.findByUserUsernameAndDeletedAtIsNull(user.getUsername(), pageable);
+        boolean isAdmin = user.getRole() == UserRole.MASTER || user.getRole() == UserRole.MANAGER;
+
+        if(isAdmin){
+            // 관리자 일 경우 삭제된 리뷰 확인 할 수 있음
+            reviewList = (search == null) ?
+                reviewRepository.findAll(pageable) :
+                reviewRepository.findAllByContentContaining(search,pageable);
+
         }else{
-            reviewList = reviewRepository.
-                    findByUserUsernameAndDeletedAtIsNullAndContentContaining(user.getUsername(), search, pageable);
+            reviewList = (search == null) ?
+                reviewRepository.findByUserUsernameAndDeletedAtIsNull(user.getUsername(), pageable) :
+                reviewRepository.
+                        findByUserUsernameAndDeletedAtIsNullAndContentContaining(user.getUsername(), search, pageable);
+
         }
 
         return reviewList.map(ReviewResponseDto::from);
@@ -79,7 +88,7 @@ public class ReviewService {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ReviewResponseDto createReview(ReviewRequestDto dto, User user) {
 
-        String status = "Completed".toUpperCase(Locale.ROOT);
+       String status = "Completed".toUpperCase(Locale.ROOT);
         // 주문 완료 상태인지 확인
        Order order = orderRepository.findByIdAndStatus(dto.getOrderId(), status).orElseThrow(()->
                new CustomException(ErrorCode.REVIEW_NOT_COMPLETED_ORDER)

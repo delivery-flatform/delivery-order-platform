@@ -34,4 +34,6 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     Double findByRatingAvgWhereStoreId(@Param("storeId") UUID storeId);
 
     Optional<Review> findByIdAndDeletedAtIsNull(UUID id);
+
+    Page<Review> findAllByContentContaining(String search, Pageable pageable);
 }
