@@ -1,5 +1,6 @@
 package com.delivery.project.review.entity;
 
+import com.delivery.project.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -17,8 +18,9 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "store_id", nullable = false)
-    private UUID storeId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="store_id", nullable = false)
+    private Store store;
 
     @Column(name = "order_id", nullable = false)
     private UUID orderId;

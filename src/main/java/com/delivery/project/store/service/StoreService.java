@@ -6,8 +6,10 @@ import com.delivery.project.global.exception.CustomException;
 import com.delivery.project.global.exception.ErrorCode;
 import com.delivery.project.region.entity.Region;
 import com.delivery.project.region.repository.RegionRepository;
+import com.delivery.project.review.repository.ReviewRepository;
 import com.delivery.project.store.dto.request.StoreRequestDto;
 import com.delivery.project.store.dto.request.StoreUpdateRequestDto;
+import com.delivery.project.store.dto.response.StoreRatingResponseDto;
 import com.delivery.project.store.dto.response.StoreResponseDto;
 import com.delivery.project.store.entity.Store;
 import com.delivery.project.store.entity.StoreCategory;
@@ -37,9 +39,18 @@ public class StoreService {
     private final RegionRepository regionRepository;
     private final CategoryRepository categoryRepository;
     private final StoreCategoryRepository storeCategoryRepository;
+    private final ReviewRepository reviewRepository;
 
     // TODO: 가게 목록 조회 (페이징, 검색)
     // TODO: 가게 단건 조회 (평점 평균 포함)
+    public StoreRatingResponseDto selectStore(UUID id) {
+        Store store = findActiveStore(id);
+        Double rating = reviewRepository.findByRatingAvgWhereStoreId(id);
+
+        log.info("가게 조회 완료 storeId={}", id);
+
+        return StoreRatingResponseDto.from(store,  rating);
+    }
 
     // 가게 등록 (OWNER+)
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER')")
@@ -125,7 +136,7 @@ public class StoreService {
                 storeCategoryRepository.save(storeCategory);
             }
         }
-        
+
         log.info("가게 카테고리 등록 완료 storeId={}", storeId);
     }
 

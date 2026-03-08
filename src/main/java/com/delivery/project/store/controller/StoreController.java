@@ -5,6 +5,7 @@ import com.delivery.project.global.security.UserDetailsImpl;
 import com.delivery.project.store.dto.request.StoreCategoryRequestDto;
 import com.delivery.project.store.dto.request.StoreRequestDto;
 import com.delivery.project.store.dto.request.StoreUpdateRequestDto;
+import com.delivery.project.store.dto.response.StoreRatingResponseDto;
 import com.delivery.project.store.dto.response.StoreResponseDto;
 import com.delivery.project.store.service.StoreService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,16 @@ public class StoreController {
     // TODO: POST   /api/v1/stores          - 가게 등록
     // TODO: PUT    /api/v1/stores/{id}     - 가게 수정
     // TODO: DELETE /api/v1/stores/{id}     - 가게 삭제
+    // 가게 단건 조회 리뷰 평균 평점과 함께
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<StoreRatingResponseDto>> selectStore(
+            @PathVariable UUID id
+    ) {
+        StoreRatingResponseDto store = storeService.selectStore(id);
+
+        return ResponseEntity.ok(ApiResponse.success(store));
+    }
+
     // 가게 등록
     @PostMapping
     public ResponseEntity<ApiResponse<StoreResponseDto>> insertStore(@RequestBody StoreRequestDto requestDto,
