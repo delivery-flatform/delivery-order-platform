@@ -53,6 +53,7 @@ public class AiServiceImpl implements AiService {
     @Override
     @Transactional
     @PreAuthorize("hasRole('OWNER')")
+
     public String aiInsert(AiRequestDto dto, String username) {
 
         if(!dto.isAiTrue()){

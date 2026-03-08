@@ -41,11 +41,21 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.fail("서버 오류가 발생했습니다."));
     }
 
+
     @ExceptionHandler(AuthorizationDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthorizationDeniedException(AuthorizationDeniedException e){
         log.error("권한 예외 : {}", e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.fail(ErrorCode.FORBIDDEN.getMessage()));
+    }
+  
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
+        log.warn("IllegalArgumentException: {}", e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST) // 400 에러
+                .body(ApiResponse.fail(e.getMessage()));
+
     }
 }
