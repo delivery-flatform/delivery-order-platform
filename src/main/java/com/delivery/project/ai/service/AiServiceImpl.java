@@ -3,6 +3,7 @@ package com.delivery.project.ai.service;
 import com.delivery.project.ai.dto.request.AiRequestDto;
 import com.delivery.project.ai.dto.response.AiResponseDto;
 import com.delivery.project.ai.entity.AiLog;
+import com.delivery.project.ai.entity.TargetTypeEnum;
 import com.delivery.project.ai.repository.AiLogRepository;
 import com.delivery.project.global.config.AiClient;
 import com.delivery.project.global.exception.CustomException;
@@ -64,7 +65,7 @@ public class AiServiceImpl implements AiService {
         AiLog aiLog = AiLog.builder()
                 .prompt(dto.getRequest())
                 .modelName("gemini")
-                .targetType(dto.getTargetType())
+                .targetType(TargetTypeEnum.PRODUCT_DESCRIPTION)
                 .createdBy(username)
                 .createdAt(LocalDateTime.now())
                 .userName(username)
