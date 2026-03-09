@@ -87,7 +87,7 @@ public class PaymentService {
 
                 // 결제 기록 저장
                 PaymentLog paymentLog = PaymentLog.builder()
-                        .paymentId(payment.getId())
+                        .payment(payment)
                         .paymentMethod(String.valueOf(Payment.PaymentMethod.CARD))
                         .amount(dto.getAmount())
                         .status(Payment.Status.COMPLETED.name())
