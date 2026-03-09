@@ -1,6 +1,6 @@
 #도커 연결
 
-# ── Stage 1: Build ────────────────────────
+# ── Stage 1: Build ──
 FROM gradle:8.7-jdk17 AS builder
 WORKDIR /app
 COPY . .
@@ -8,6 +8,7 @@ COPY . .
 RUN gradle bootJar -x test --no-daemon
 
 # ── Stage 2: Run ──
+# openjdk 대신 AWS 환경에서 가장 안정적인 corretto 사용
 FROM amazoncorretto:17-al2023-headless
 WORKDIR /app
 
