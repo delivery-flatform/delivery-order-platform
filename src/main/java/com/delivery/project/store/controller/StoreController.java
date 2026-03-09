@@ -9,6 +9,7 @@ import com.delivery.project.store.dto.response.StoreRatingResponseDto;
 import com.delivery.project.store.dto.response.StoreResponseDto;
 import com.delivery.project.store.service.StoreService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,11 +24,19 @@ public class StoreController {
 
     private final StoreService storeService;
 
-    // TODO: GET    /api/v1/stores          - 가게 목록 조회
-    // TODO: GET    /api/v1/stores/{id}     - 가게 단건 조회
-    // TODO: POST   /api/v1/stores          - 가게 등록
-    // TODO: PUT    /api/v1/stores/{id}     - 가게 수정
-    // TODO: DELETE /api/v1/stores/{id}     - 가게 삭제
+//     가게 목록 조회 리뷰 평균 평점과 함께, 가게명 검색
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<StoreRatingResponseDto>>> selectStoreList(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "createdAt") String sortBy,
+            @RequestParam(value = "isAsc", defaultValue = "false") boolean isAsc,
+            @RequestParam(required = false) String keyword
+    ) {
+        Page<StoreRatingResponseDto> stores = storeService.selectStoreList(page, size, sortBy, isAsc, keyword);
+        return ResponseEntity.ok(ApiResponse.success(stores));
+    }
+
     // 가게 단건 조회 리뷰 평균 평점과 함께
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<StoreRatingResponseDto>> selectStore(

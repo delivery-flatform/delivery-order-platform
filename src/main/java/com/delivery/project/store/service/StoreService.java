@@ -19,6 +19,10 @@ import com.delivery.project.user.entity.User;
 import com.delivery.project.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,8 +45,30 @@ public class StoreService {
     private final StoreCategoryRepository storeCategoryRepository;
     private final ReviewRepository reviewRepository;
 
-    // TODO: 가게 목록 조회 (페이징, 검색)
-    // TODO: 가게 단건 조회 (평점 평균 포함)
+    // 가게 목록 조회 (페이징, 검색)
+    public Page<StoreRatingResponseDto> selectStoreList(int page, int size, String sortBy, boolean isAsc, String keyword) {
+
+        Sort.Direction direction = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, sortBy);
+
+        Pageable pageable = PageRequest.of(page - 1, size, sort);
+
+        Page<Object[]> result;
+
+        if (keyword == null || keyword.isBlank()) {
+            result = storeRepository.findStoreWithRating(pageable);
+        } else {
+            result = storeRepository.searchStoreWithRating(keyword, pageable);
+        }
+
+        return result.map(row -> {
+            Store store = (Store) row[0];
+            Double rating = (Double) row[1];
+            return StoreRatingResponseDto.from(store, rating);
+        });
+    }
+
+    // 가게 단건 조회 (평점 평균 포함)
     public StoreRatingResponseDto selectStore(UUID id) {
         Store store = findActiveStore(id);
         Double rating = reviewRepository.findByRatingAvgWhereStoreId(id);
