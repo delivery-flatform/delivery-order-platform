@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -36,6 +38,7 @@ public class Payment {
     @Schema(description = "주문한 총 결제 비용")
     private Integer amount;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Schema(description = "결제 상태")
     private String status;
