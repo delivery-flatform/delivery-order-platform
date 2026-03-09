@@ -2,9 +2,12 @@ package com.delivery.project.region.entity;
 
 import com.delivery.project.region.dto.RegionRequestDto;
 import com.delivery.project.region.dto.request.RegionUpdateRequestDto;
+import com.delivery.project.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -48,6 +51,9 @@ public class Region {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
+    @OneToMany(mappedBy = "region")
+    private List<Store> stores = new ArrayList<>();
 
     public static Region toEntity(RegionRequestDto requestDto, String username) {
         return Region.builder()
