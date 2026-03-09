@@ -87,6 +87,7 @@ public class PaymentService {
 
                 // 결제 기록 저장
                 PaymentLog paymentLog = PaymentLog.builder()
+                        .paymentId(payment.getId())
                         .paymentMethod(String.valueOf(Payment.PaymentMethod.CARD))
                         .amount(dto.getAmount())
                         .status(Payment.Status.COMPLETED.name())
@@ -107,7 +108,7 @@ public class PaymentService {
             Order order = orderRepository.findById(UUID.fromString(dto.getOrderId()))
                     .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
 
-            // 결제 취소 저장
+            // 결제 실패 저장
             Payment payment = Payment.builder()
                     .orderId(order.getId())
                     .paymentMethod(String.valueOf(Payment.PaymentMethod.CARD))
@@ -136,6 +137,10 @@ public class PaymentService {
         Payment payment = paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("결제 내역을 찾을 수 없습니다."));
 
+        PaymentLog paymentLog = paymentLogReposity.findByPaymentIdAndDeletedAtIsNull(payment.getId())
+                .orElseThrow(() -> new IllegalArgumentException("수정할 결제 로그를 찾을 수 없습니다."));
+
+
         String url = "https://api.tosspayments.com/v1/payments/" + payment.getPaymentKey() + "/cancel";
 
         HttpHeaders headers = new HttpHeaders();
@@ -153,6 +158,7 @@ public class PaymentService {
 
             if (response.getStatusCode().is2xxSuccessful()) {
                 payment.updateStatus(Payment.Status.CANCELLED.name(), username);
+                paymentLog.updateStatus(Payment.Status.CANCELLED.name(), username);
 
                 log.info("토스 결제 취소 성공: orderId={}", orderId);
                 return true;

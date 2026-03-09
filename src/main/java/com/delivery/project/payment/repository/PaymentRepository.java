@@ -19,4 +19,5 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     Page<Payment> findAllByUsername(@Param("username") String username, Pageable pageable);
 
     Optional<Payment> findByOrderId(UUID orderId);
+
 }

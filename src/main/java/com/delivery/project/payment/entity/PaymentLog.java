@@ -2,6 +2,7 @@ package com.delivery.project.payment.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -49,4 +50,16 @@ public class PaymentLog {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
+    public void updateStatus(String status, String updatedBy) {
+        this.status = status;
+        this.updatedBy = updatedBy;
+        this.updatedAt = LocalDateTime.now();
+
+        // 결제 취소 시 취소 시간과 취소한 사람 함께 기록
+        if (Payment.Status.CANCELLED.name().equals(status)) {
+            this.deletedAt = LocalDateTime.now();
+            this.deletedBy = updatedBy;
+        }
+    }
 }
