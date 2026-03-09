@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <link rel="icon" href="https://static.toss.im/icons/png/4x/icon-toss-logo.png"/>
+    <link rel="stylesheet" type="text/css" href="/style.css"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>결제 성공</title>
+</head>
+<body>
+<div class="box_section" style="width: 600px; margin: 50px auto; text-align: center;">
+    <img width="100px" src="https://static.toss.im/lotties/loading-spot-apng.png" id="loading-img"/>
+    <h2 id="status-text">결제 승인 중입니다...</h2>
+
+    <div id="info" style="display: none; text-align: left; background: #f9fafb; padding: 20px; border-radius: 12px;">
+        <p><b>주문번호:</b> <span id="orderId"></span></p>
+        <p><b>결제금액:</b> <span id="amount"></span>원</p>
+        <p><b>결제키:</b> <span id="paymentKey"></span></p>
+    </div>
+
+    <a href="/" id="home-button"
+       style="display: none; margin-top: 20px; display: inline-block; padding: 10px 20px; background: #3182f6; color: white; border-radius: 8px; text-decoration: none;">홈으로
+        이동</a>
+</div>
+
+<script>
+    // 1. URL에서 토스가 보낸 파라미터 추출
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentKey = urlParams.get("paymentKey");
+    const orderId = urlParams.get("orderId");
+    const amount = urlParams.get("amount");
+
+    async function confirmPayment() {
+        // 2. PaymentConfirmRequestDto 구조에 맞게 데이터 구성
+        const requestData = {
+            paymentKey: paymentKey,
+            orderId: orderId, // 우리 DB의 UUID와 일치함
+            amount: parseInt(amount)
+        };
+
+        try {
+            // 3. 작성하신 PaymentController의 /confirm API 호출
+            const response = await fetch("/api/v1/payments/confirm", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestData),
+            });
+
+            const result = await response.json();
+
+            if (result.data === true) {
+                document.getElementById("loading-img").src = "https://static.toss.im/illusts/check-blue-spot-ending-1.png";
+                document.getElementById("status-text").innerText = "결제가 완료되었습니다!";
+                document.getElementById("info").style.display = "block";
+                document.getElementById("home-button").style.display = "inline-block";
+
+                document.getElementById("orderId").innerText = orderId;
+                document.getElementById("amount").innerText = amount;
+                document.getElementById("paymentKey").innerText = paymentKey;
+            } else {
+                // 실패 시 서버가 보낸 메시지를 띄워주면 디버깅이 더 쉽습니다.
+                alert(result.message || "결제 승인에 실패했습니다. 관리자에게 문의하세요.");
+                window.location.href = "/payment/fail.html";
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("서버 통신 중 오류가 발생했습니다.");
+        }
+    }
+
+    // 페이지 로드 시 즉시 승인 요청 실행
+    if (paymentKey && orderId && amount) {
+        confirmPayment();
+    } else {
+        alert("유효하지 않은 결제 요청입니다.");
+    }
+</script>
+</body>
+</html>

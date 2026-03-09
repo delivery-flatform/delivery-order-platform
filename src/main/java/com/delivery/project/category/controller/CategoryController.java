@@ -35,7 +35,7 @@ public class CategoryController {
     }
 
     // 카테고리 등록
-    @PostMapping
+    @PostMapping("/registration")
     public void insertCategory(@RequestBody CategoryRequestDto requestDto) {
         categoryService.insertCategory(requestDto);
     }

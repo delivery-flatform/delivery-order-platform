@@ -11,7 +11,7 @@ import java.util.UUID;
 public interface ProductRepository extends JpaRepository<Product, UUID> {
     List<Product> findByStoreIdAndDeletedAtIsNull(UUID storeId);
 
-    // 여러 개의 상품 ID를 한꺼번에 조회
-    @Query("SELECT p FROM Product p WHERE p.id IN :productIds AND p.deletedAt IS NULL")
-    List<Product> findAllByIdInAndDeletedAtIsNull(@Param("productIds") List<UUID> productIds);
+    @Query("SELECT p FROM Product p WHERE p.name IN :productNames AND p.deletedAt IS NULL")
+    List<Product> findAllByNameInAndDeletedAtIsNull(@Param("productNames") List<String> productNames);
+
 }

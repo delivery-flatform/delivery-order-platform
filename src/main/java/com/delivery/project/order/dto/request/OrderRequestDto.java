@@ -9,10 +9,12 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor
 public class OrderRequestDto {
-    private UUID storeId;
+    private String storeName;
     private String address;
     private String comment;
-    private List<ProductItem> products;
+    private List<ProductItem> products; // 상품id
+    private List<String> productNameList; // 상품한글이름
+    private Integer amount;
 
     @Getter
     @NoArgsConstructor
@@ -20,4 +22,5 @@ public class OrderRequestDto {
         private UUID productId;
         private Integer quantity;
     }
+
 }
