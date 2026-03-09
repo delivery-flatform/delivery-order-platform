@@ -10,4 +10,6 @@ public interface StoreRepository extends JpaRepository<Store, UUID> {
 
     Optional<Store> findByNameAndDeletedAtIsNull(String name);
     // TODO: 지역별 가게 조회, 카테고리별 가게 조회
+
+    Optional<Store> findByOwnerUsernameAndDeletedAtIsNull(String ownerUsername);
 }

@@ -4,6 +4,8 @@ import com.delivery.project.order.entity.Order;
 import com.delivery.project.order.repository.OrderRepository;
 import com.delivery.project.payment.dto.request.PaymentConfirmRequestDto;
 import com.delivery.project.payment.entity.Payment;
+import com.delivery.project.payment.entity.PaymentLog;
+import com.delivery.project.payment.repository.PaymentLogRepository;
 import com.delivery.project.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,8 @@ public class PaymentService {
     private PaymentRepository paymentRepository;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private PaymentLogRepository paymentLogReposity;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final String TOSS_SECRET_KEY = "test_sk_mBZ1gQ4YVXK4AxDjYdx93l2KPoqN";
@@ -81,6 +85,16 @@ public class PaymentService {
                         .build();
                 paymentRepository.save(payment);
 
+                // 결제 기록 저장
+                PaymentLog paymentLog = PaymentLog.builder()
+                        .paymentMethod(String.valueOf(Payment.PaymentMethod.CARD))
+                        .amount(dto.getAmount())
+                        .status(Payment.Status.COMPLETED.name())
+                        .createdAt(LocalDateTime.now())
+                        .createdBy(order.getCustomerUsername())
+                        .build();
+                paymentLogReposity.save(paymentLog);
+
                 // 결제 완료 상태로 변경
                 order.updateStatus(Order.Status.PENDING, order.getCustomerUsername());
                 orderRepository.save(order);
@@ -93,6 +107,7 @@ public class PaymentService {
             Order order = orderRepository.findById(UUID.fromString(dto.getOrderId()))
                     .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
 
+            // 결제 취소 저장
             Payment payment = Payment.builder()
                     .orderId(order.getId())
                     .paymentMethod(String.valueOf(Payment.PaymentMethod.CARD))
