@@ -3,14 +3,11 @@ package com.delivery.project.payment.service;
 import com.delivery.project.order.entity.Order;
 import com.delivery.project.order.repository.OrderRepository;
 import com.delivery.project.payment.dto.request.PaymentConfirmRequestDto;
-import com.delivery.project.payment.dto.response.PaymentResponseDto;
 import com.delivery.project.payment.entity.Payment;
 import com.delivery.project.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -93,26 +90,29 @@ public class PaymentService {
             }
             return false;
         } catch (HttpStatusCodeException e) {
+            Order order = orderRepository.findById(UUID.fromString(dto.getOrderId()))
+                    .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
+
+            Payment payment = Payment.builder()
+                    .orderId(order.getId())
+                    .paymentMethod(String.valueOf(Payment.PaymentMethod.CARD))
+                    .paymentKey(dto.getPaymentKey())
+                    .amount(dto.getAmount())
+                    .status(Payment.Status.FAILED.name()) // 토스 승인 실패 상태
+                    .createdAt(LocalDateTime.now())
+                    .createdBy(order.getCustomerUsername())
+                    .build();
+            paymentRepository.save(payment);
+
+
             log.error("토스 승인 거절 사유: {}", e.getResponseBodyAsString());
             return false;
         }
     }
 
     // TODO: 결제 단건 조회
-    public PaymentConfirmRequestDto selectPayment(UUID orderId) {
-
-        Payment payment = paymentRepository.findByIdAndDeletedAtIsNull(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않거나 삭제되었습니다. ID: " + orderId));
-
-        return PaymentConfirmRequestDto.from(payment);
-    }
 
     // TODO: 결제 목록 조회
-    public Page<PaymentResponseDto> getPaymentList(String username, Pageable pageable) {
-        Page<Payment> payments = paymentRepository.findAllByUsername(username, pageable);
-
-        return payments.map(PaymentResponseDto::fromEntity);
-    }
 
     // TODO: 결제 취소
     @Transactional

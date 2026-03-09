@@ -69,9 +69,10 @@ public class Payment {
         this.updatedBy = updatedBy;
         this.updatedAt = LocalDateTime.now();
 
-        // 결제가 완료된 시점이라면 결제 시간(paidAt)도 함께 기록
-        if (Status.COMPLETED.name().equals(status)) {
-            this.paidAt = LocalDateTime.now();
+        // 결제 취소 시 취소 시간과 취소한 사람 함께 기록
+        if (Status.CANCELLED.name().equals(status)) {
+            this.deletedAt = LocalDateTime.now();
+            this.deletedBy = updatedBy;
         }
     }
 }
