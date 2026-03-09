@@ -2,15 +2,20 @@ package com.delivery.project.payment.controller;
 
 import com.delivery.project.global.response.ApiResponse;
 import com.delivery.project.payment.dto.request.PaymentConfirmRequestDto;
+import com.delivery.project.payment.dto.response.PaymentResponseDto;
 import com.delivery.project.payment.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -36,11 +41,8 @@ public class PaymentController {
     }
 
     // TODO: GET  /api/v1/payments/{id}     - 결제 단건 조회
-
-    // TODO: GET  /api/v1/payments          - 결제 목록 조회
-
-    // TODO: GET  /api/v1/payments/{id}     - 결제 단건 조회
     @GetMapping("/searchpayment/{orderId}")
+    @Operation(summary = "결제 단건 조회", description = "주문 단건 별로 조회")
     public ResponseEntity<ApiResponse<PaymentConfirmRequestDto>> selectPayment(@PathVariable UUID orderId) {
 
         PaymentConfirmRequestDto paymentResponse = paymentService.selectPayment(orderId);
@@ -49,6 +51,7 @@ public class PaymentController {
 
     // TODO: GET  /api/v1/payments          - 결제 목록 조회
     @GetMapping("/searchpaymentlist")
+    @Operation(summary = "결제 목록 조회", description = "주문 목록 전체 조회")
     public ResponseEntity<ApiResponse<Page<PaymentResponseDto>>> selectPaymentList(
             // 시큐리티를 사용 중이라면 인증 객체에서 username을 가져옵니다.
             @AuthenticationPrincipal UserDetails userDetails,
@@ -70,6 +73,5 @@ public class PaymentController {
 
         return ResponseEntity.ok(ApiResponse.success(response));
     }
-
 
 }

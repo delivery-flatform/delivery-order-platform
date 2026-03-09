@@ -1,5 +1,6 @@
 package com.delivery.project.payment.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,19 +17,24 @@ public class PaymentLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Schema(description = "주문 ID", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_id", nullable = false)
+    @Schema(description = "p_payment 테이블의 id를 fk 설정")
     private Payment payment;
 
     @Column(name = "payment_method", nullable = false, length = 20)
+    @Schema(description = "결제 수단")
     private String paymentMethod;
 
     @Column(nullable = false)
+    @Schema(description = "주문한 총 결제 비용")
     private Integer amount;
 
     @Column(nullable = false, length = 20)
+    @Schema(description = "결제 상태")
     private String status;
 
     @Column(name = "paid_at")

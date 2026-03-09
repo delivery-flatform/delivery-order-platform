@@ -3,6 +3,7 @@ package com.delivery.project.payment.service;
 import com.delivery.project.order.entity.Order;
 import com.delivery.project.order.repository.OrderRepository;
 import com.delivery.project.payment.dto.request.PaymentConfirmRequestDto;
+import com.delivery.project.payment.dto.response.PaymentResponseDto;
 import com.delivery.project.payment.entity.Payment;
 import com.delivery.project.payment.entity.PaymentLog;
 import com.delivery.project.payment.repository.PaymentLogRepository;
@@ -10,6 +11,8 @@ import com.delivery.project.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -75,11 +78,11 @@ public class PaymentService {
 
                 // 결제(Payment) 내역 DB 저장
                 Payment payment = Payment.builder()
-                        .orderId(order.getId())
+                        .order(order)
                         .paymentMethod(String.valueOf(Payment.PaymentMethod.CARD))
                         .paymentKey(dto.getPaymentKey())
                         .amount(dto.getAmount())
-                        .status(Payment.Status.COMPLETED.name()) // 토스 승인 완료 상태
+                        .status(Payment.Status.COMPLETED) // 토스 승인 완료 상태
                         .createdAt(LocalDateTime.now())
                         .createdBy(order.getCustomerUsername())
                         .build();
@@ -110,11 +113,10 @@ public class PaymentService {
 
             // 결제 실패 저장
             Payment payment = Payment.builder()
-                    .orderId(order.getId())
                     .paymentMethod(String.valueOf(Payment.PaymentMethod.CARD))
                     .paymentKey(dto.getPaymentKey())
                     .amount(dto.getAmount())
-                    .status(Payment.Status.FAILED.name()) // 토스 승인 실패 상태
+                    .status(Payment.Status.FAILED) // 토스 승인 실패 상태
                     .createdAt(LocalDateTime.now())
                     .createdBy(order.getCustomerUsername())
                     .build();
@@ -127,14 +129,26 @@ public class PaymentService {
     }
 
     // TODO: 결제 단건 조회
+    public PaymentConfirmRequestDto selectPayment(UUID orderId) {
+
+        Payment payment = paymentRepository.findByOrder_IdAndDeletedAtIsNull(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않거나 삭제되었습니다. ID: " + orderId));
+
+        return PaymentConfirmRequestDto.from(payment);
+    }
 
     // TODO: 결제 목록 조회
+    public Page<PaymentResponseDto> getPaymentList(String username, Pageable pageable) {
+        Page<Payment> payments = paymentRepository.findAllByUsername(username, pageable);
+
+        return payments.map(PaymentResponseDto::fromEntity);
+    }
 
     // TODO: 결제 취소
     @Transactional
     public boolean deletePayment(UUID orderId, String username) {
         // 해당 주문의 결제 내역 조회 (paymentKey가 필요함)
-        Payment payment = paymentRepository.findByOrderId(orderId)
+        Payment payment = paymentRepository.findByOrder_IdAndDeletedAtIsNull(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("결제 내역을 찾을 수 없습니다."));
 
         PaymentLog paymentLog = paymentLogReposity.findByPaymentIdAndDeletedAtIsNull(payment.getId())

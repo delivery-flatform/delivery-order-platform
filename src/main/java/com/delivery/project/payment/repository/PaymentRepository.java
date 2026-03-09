@@ -12,9 +12,9 @@ import java.util.UUID;
 
 public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
-    Optional<Payment> findByIdAndDeletedAtIsNull(UUID orderId);
+    Optional<Payment> findByOrder_IdAndDeletedAtIsNull(UUID orderId);
 
-    @Query("SELECT p FROM Payment p JOIN Order o ON p.orderId = o.id " +
+    @Query("SELECT p FROM Payment p JOIN p.order o " +
             "WHERE o.customerUsername= :username AND p.deletedAt IS NULL")
     Page<Payment> findAllByUsername(@Param("username") String username, Pageable pageable);
 
