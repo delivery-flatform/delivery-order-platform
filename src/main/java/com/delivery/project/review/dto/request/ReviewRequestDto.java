@@ -1,5 +1,6 @@
 package com.delivery.project.review.dto.request;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 import java.util.UUID;
@@ -7,8 +8,12 @@ import java.util.UUID;
 @Getter
 public class ReviewRequestDto {
 
+    @NotNull(message = "가게 번호는 필수입니다.")
     private UUID storeId;
+
+    @NotNull(message = "주문 번호(orderId)는 필수입니다.")
     private UUID orderId;
+
     private String content;
     private short rating;
 }
