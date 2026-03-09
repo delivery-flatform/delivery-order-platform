@@ -21,7 +21,7 @@ public class AiLog {
     private UUID id;
 
     @Column(name = "target_type", nullable = false, length = 30)
-    private String targetType;
+    private TargetTypeEnum targetType;
 
     @Column(length = 1000)
     private String prompt;
@@ -41,5 +41,6 @@ public class AiLog {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
 
 }

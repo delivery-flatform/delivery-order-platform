@@ -8,6 +8,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Getter
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -22,6 +25,8 @@ public class PaymentConfirmRequestDto {
         return PaymentConfirmRequestDto.builder()
                 .PaymentKey(payment.getPaymentMethod().name())
                 .orderId(String.valueOf(payment.getOrder().getId()))
+                .PaymentKey(payment.getPaymentMethod())
+                .orderId(String.valueOf(payment.getOrderId()))
                 .amount(payment.getAmount())
                 .build();
     }

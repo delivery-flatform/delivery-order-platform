@@ -26,10 +26,10 @@ public class PaymentResponseDto {
     public static PaymentResponseDto fromEntity(Payment payment) {
         return PaymentResponseDto.builder()
                 .paymentId(payment.getId())
-                .orderId(payment.getOrder().getId())
-                .paymentMethod(payment.getPaymentMethod().name())
+                .orderId(payment.getOrderId())
+                .paymentMethod(payment.getPaymentMethod())
                 .amount(payment.getAmount())
-                .status(payment.getStatus().name())
+                .status(payment.getStatus())
                 .paidAt(payment.getPaidAt())
                 .createdAt(payment.getCreatedAt())
                 .build();
