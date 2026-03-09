@@ -1,8 +1,13 @@
 package com.delivery.project.category.entity;
 
+import com.delivery.project.category.dto.CategoryRequestDto;
+import com.delivery.project.category.dto.CategoryUpdateDto;
+import com.delivery.project.store.entity.StoreCategory;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -17,7 +22,7 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 100, unique = true)
     private String name;
 
     @Column(name = "is_active", nullable = false)
@@ -40,4 +45,28 @@ public class Category {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
+    @OneToMany(mappedBy = "category")
+    private List<StoreCategory> storeCategoryList = new ArrayList<>();
+
+    public static Category toEntity(CategoryRequestDto requestDto, String username) {
+        return Category.builder()
+                .name(requestDto.getName())
+                .isActive(true)
+                .createdAt(LocalDateTime.now())
+                .createdBy(username)
+                .build();
+    }
+
+    public void updateCategory(CategoryUpdateDto requestDto, String updatedBy) {
+        this.name = requestDto.getName();
+        this.isActive = requestDto.getIsActive();
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
+    }
+
+    public void deleteCategory(String deletedBy) {
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = deletedBy;
+    }
 }

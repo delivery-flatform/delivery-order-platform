@@ -4,20 +4,17 @@ import com.delivery.project.product.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, UUID> {
+    List<Product> findByStoreIdAndDeletedAtIsNull(UUID storeId);
 
-    Optional<Product> findByIdAndDeletedAtIsNull(UUID id);
+    @Query("SELECT p FROM Product p WHERE p.name IN :productNames AND p.deletedAt IS NULL")
+    List<Product> findAllByNameInAndDeletedAtIsNull(@Param("productNames") List<String> productNames);
 
-    // 일반 사용자용 (삭제 X + 숨김 X)
-    Page<Product> findByDeletedAtIsNullAndIsHiddenFalse(Pageable pageable);
-
-    // 관리자용 (삭제 X, 숨김 포함)
-    Page<Product> findByDeletedAtIsNull(Pageable pageable);
-
-    // 단건 조회 (삭제 X)
-    //Optional<Product> findByIdAndDeletedAtIsNull(UUID id);
 }
 
