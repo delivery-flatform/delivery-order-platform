@@ -18,10 +18,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AiClient {
 
-    @Value("${spring.gemini.url}")
+    @Value("${gemini.api.url}")
     private String url;
 
-    @Value("${spring.gemini.api-key}")
+    @Value("${gemini.api.key}")
     private String apiKey;
 
     private final WebClient webClient;
