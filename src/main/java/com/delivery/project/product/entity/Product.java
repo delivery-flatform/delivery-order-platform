@@ -1,8 +1,12 @@
 package com.delivery.project.product.entity;
 
+import com.delivery.project.order.entity.Order;
+import com.delivery.project.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -17,8 +21,9 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "store_id", nullable = false)
-    private UUID storeId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
 
     @Column(nullable = false, length = 255)
     private String name;
@@ -49,4 +54,55 @@ public class Product {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
+    @OneToMany(mappedBy = "product")
+    private List<Order> orders = new ArrayList<>();
+
+    //  생성 메서드
+    public static Product create(
+            Store store,
+            String name,
+            String description,
+            Integer price,
+            String createdBy
+    ) {
+        Product product = new Product();
+        product.store = store;
+        product.name = name;
+        product.description = description;
+        product.price = price;
+        product.isHidden = false;
+        product.createdAt = LocalDateTime.now();
+        product.createdBy = createdBy;
+        return product;
+    }
+
+    //  수정
+    public void update(String name, String description, Integer price, String updatedBy) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
+    }
+
+    //  삭제 (Soft Delete)
+    public void delete(String deletedBy) {
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = deletedBy;
+    }
+
+    //  숨김
+    public void hide(String updatedBy) {
+        this.isHidden = true;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
+    }
+
+    //  숨김 해제
+    public void unhide(String updatedBy) {
+        this.isHidden = false;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
+    }
 }
