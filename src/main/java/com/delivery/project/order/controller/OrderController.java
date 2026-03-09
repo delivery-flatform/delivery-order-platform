@@ -35,7 +35,9 @@ public class OrderController {
             @RequestParam(value = "storeId", required = false) String storeId,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<OrderResponseDto> orderPage = orderService.selectOrders(userId, storeId, pageable);
+        Pageable validatedPageable = validatePageSize(pageable);
+
+        Page<OrderResponseDto> orderPage = orderService.selectOrders(userId, storeId, validatedPageable);
         return ResponseEntity.ok(ApiResponse.success(orderPage));
     }
 
@@ -46,7 +48,9 @@ public class OrderController {
             @RequestBody OrderSearchRequestDto searchDto,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<OrderResponseDto> orderPage = orderService.selectOrdersSearch(searchDto, pageable);
+        Pageable validatedPageable = validatePageSize(pageable);
+
+        Page<OrderResponseDto> orderPage = orderService.selectOrdersSearch(searchDto, validatedPageable);
         return ResponseEntity.ok(ApiResponse.success(orderPage));
     }
 
@@ -96,5 +100,17 @@ public class OrderController {
         OrderResponseDto response = orderService.updateOrderStatus(orderId, newStatus, userId);
 
         return ResponseEntity.ok(ApiResponse.success("주문 상태가 " + newStatus + "(으)로 변경되었습니다.", response));
+    }
+
+    private Pageable validatePageSize(Pageable pageable) {
+        int size = pageable.getPageSize();
+        if (size != 10 && size != 30 && size != 50) {
+            return org.springframework.data.domain.PageRequest.of(
+                    pageable.getPageNumber(),
+                    10,
+                    pageable.getSort()
+            );
+        }
+        return pageable;
     }
 }
