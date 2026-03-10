@@ -71,6 +71,7 @@ class ReviewServiceTest {
 
         store = Store.builder()
                 .name("김치찌개")
+                .user(user)
                 .build();
 
         review = Review.builder()
@@ -87,7 +88,7 @@ class ReviewServiceTest {
     @DisplayName("리뷰 생성 성공 테스트")
     void review_insert_success() {
 
-        ReviewRequestDto dto = new ReviewRequestDto(id, id, "맛있어요ㅠㅠ", (short) 1.0);
+        ReviewRequestDto dto = new ReviewRequestDto(id, "맛있어요ㅠㅠ", (short) 1.0);
 
         // findById -> any() 어떤 값이든, Status -> eq() 무조건 괄호 안에 값으로
         given(orderRepository.findByIdAndStatus(any(), eq(Order.Status.COMPLETED)))
