@@ -113,6 +113,7 @@ public class PaymentService {
 
             // 결제 실패 저장
             Payment payment = Payment.builder()
+                    .order(order)
                     .paymentMethod(String.valueOf(Payment.PaymentMethod.CARD))
                     .paymentKey(dto.getPaymentKey())
                     .amount(dto.getAmount())
@@ -121,6 +122,16 @@ public class PaymentService {
                     .createdBy(order.getCustomerUsername())
                     .build();
             paymentRepository.save(payment);
+
+            PaymentLog paymentLog = PaymentLog.builder()
+                    .payment(payment)
+                    .paymentMethod(String.valueOf(Payment.PaymentMethod.CARD))
+                    .amount(dto.getAmount())
+                    .status(Payment.Status.FAILED.name())
+                    .createdAt(LocalDateTime.now())
+                    .createdBy(order.getCustomerUsername())
+                    .build();
+            paymentLogReposity.save(paymentLog);
 
 
             log.error("토스 승인 거절 사유: {}", e.getResponseBodyAsString());

@@ -41,9 +41,9 @@ public class PaymentController {
     }
 
     // TODO: GET  /api/v1/payments/{id}     - 결제 단건 조회
-    @GetMapping("/searchpayment/{orderId}")
+    @GetMapping("/searchpayment")
     @Operation(summary = "결제 단건 조회", description = "주문 단건 별로 조회")
-    public ResponseEntity<ApiResponse<PaymentConfirmRequestDto>> selectPayment(@PathVariable UUID orderId) {
+    public ResponseEntity<ApiResponse<PaymentConfirmRequestDto>> selectPayment(@RequestParam("orderId") UUID orderId) {
 
         PaymentConfirmRequestDto paymentResponse = paymentService.selectPayment(orderId);
         return ResponseEntity.ok(ApiResponse.success(paymentResponse));

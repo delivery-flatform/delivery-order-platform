@@ -12,13 +12,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PaymentConfirmRequestDto {
 
-    private String PaymentKey;
+    private String paymentKey;
     private String orderId;
     private int amount;
 
     public static PaymentConfirmRequestDto from(Payment payment) {
         return PaymentConfirmRequestDto.builder()
-                .PaymentKey(payment.getPaymentKey())
+                .paymentKey(payment.getPaymentKey())
                 .orderId(String.valueOf(payment.getOrder().getId()))
                 .amount(payment.getAmount())
                 .build();
