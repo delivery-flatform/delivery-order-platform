@@ -12,7 +12,9 @@ spring:
       hibernate:
         format_sql: true
 
-# spring: 하위가 아닌 최상위 계층으로 이동
+server:
+  port: 8080
+
 gemini:
   api:
     url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent

@@ -1,7 +1,7 @@
 package com.delivery.project.category.entity;
 
-import com.delivery.project.category.dto.CategoryRequestDto;
-import com.delivery.project.category.dto.CategoryUpdateDto;
+import com.delivery.project.category.dto.request.CategoryRequestDto;
+import com.delivery.project.category.dto.request.CategoryUpdateDto;
 import com.delivery.project.store.entity.StoreCategory;
 import jakarta.persistence.*;
 import lombok.*;
