@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -209,22 +210,26 @@ public class OrderService {
 
     // TODO: 주문 상태 변경 (OWNER or MANAGER+)
     @Transactional
-    //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'OWNER')")
-    public OrderResponseDto updateOrderStatus(UUID orderId, Order.Status newStatus, String username) {
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER','OWNER')")
+    public OrderResponseDto updateOrderStatus(UUID orderId, Order.Status newStatus, String username, List<String> roles) {
 
         // 주문 조회
         Order order = orderRepository.findByIdAndDeletedAtIsNull(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("상태를 변경할 주문을 찾을 수 없습니다. ID: " + orderId));
 
-        // 권한 검증
-        // 실제로는 토큰에서 권한을 가져오거나, DB에서 해당 상점의 주인인지 조회해야 함
-        /*
-        if (!order.getStoreOwnerUsername().equals(username)) {
-            throw new IllegalArgumentException("해당 상점의 주문 상태를 변경할 권한이 없습니다.");
-        }
-        */
+        // MASTER나 MANAGER 권한이 포함되어 있는지 확인
+        boolean isStaff = roles.contains("ROLE_MASTER") || roles.contains("ROLE_MANAGER");
 
-        // 엔티티 메서드 호출 (상태 변경)
+        if (!isStaff) {
+            // 사장님(OWNER)인 경우에만 본인 가게인지 확인
+            Store store = storeRepository.findByUserUsernameAndDeletedAtIsNull(username)
+                    .orElseThrow(() -> new IllegalArgumentException("운영 중인 가게 정보를 찾을 수 없습니다: " + username));
+
+            if (!order.getStoreId().equals(store.getId())) {
+                throw new IllegalArgumentException("본인 가게의 주문만 상태를 변경할 수 있습니다.");
+            }
+        }
+
         order.updateStatus(newStatus, username);
 
         return OrderResponseDto.from(order);
