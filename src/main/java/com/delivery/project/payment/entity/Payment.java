@@ -1,12 +1,11 @@
 package com.delivery.project.payment.entity;
 
+import com.delivery.project.order.entity.Order;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -19,12 +18,11 @@ public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Schema(description = "결제 ID", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID id;
 
-    @Column(name = "order_id", nullable = false)
-    @Schema(description = "주문 ID")
-    private UUID orderId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
     @Column(name = "payment_method", nullable = false, length = 100)
     @Schema(description = "결제한 수단")
@@ -41,7 +39,7 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Schema(description = "결제 상태")
-    private String status;
+    private Status status;
 
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
@@ -68,7 +66,6 @@ public class Payment {
     public enum Status { PENDING, COMPLETED, FAILED, CANCELLED }
 
     public void updateStatus(String status, String updatedBy) {
-        this.status = status;
         this.updatedBy = updatedBy;
         this.updatedAt = LocalDateTime.now();
 

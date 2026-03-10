@@ -1,8 +1,8 @@
 package com.delivery.project.category.service;
 
-import com.delivery.project.category.dto.CategoryRequestDto;
-import com.delivery.project.category.dto.CategoryResponseDto;
-import com.delivery.project.category.dto.CategoryUpdateDto;
+import com.delivery.project.category.dto.request.CategoryRequestDto;
+import com.delivery.project.category.dto.response.CategoryResponseDto;
+import com.delivery.project.category.dto.request.CategoryUpdateDto;
 import com.delivery.project.category.entity.Category;
 import com.delivery.project.category.repository.CategoryRepository;
 import com.delivery.project.global.exception.CustomException;

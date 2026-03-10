@@ -15,9 +15,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -29,28 +34,48 @@ public class OrderController {
 
     // TODO: GET    /api/v1/orders/{userId}&{storedId}          - 주문 목록 조회
     @GetMapping("/list")
-    @Operation(summary = "주문 내역 전체 조회", description = "userId와 storeId로 주문 내역을 페이징하여 조회합니다.")
+    @Operation(summary = "주문 내역 전체 조회", description = "로그인한 사용자의 권한에 따라 본인 주문 또는 내 가게 주문을 조회합니다.")
     public ResponseEntity<ApiResponse<Page<OrderResponseDto>>> selectOrders(
-            @RequestParam(value = "userId", required = false) String userId,
-            @RequestParam(value = "storeId", required = false) String storeId,
+            @AuthenticationPrincipal UserDetails userDetails,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Pageable validatedPageable = validatePageSize(pageable);
 
-        Page<OrderResponseDto> orderPage = orderService.selectOrders(userId, storeId, validatedPageable);
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
+        // 서비스에 사용자의 이름(username)과 권한 목록을 넘깁니다.
+        Page<OrderResponseDto> orderPage = orderService.selectOrders(
+                userDetails.getUsername(),
+                roles,
+                validatedPageable
+        );
+
         return ResponseEntity.ok(ApiResponse.success(orderPage));
     }
 
-    // TODO : GET /api/v1/oredrs/listsearch/{userId}&{storedId} - 주문 검색 조회
+    // TODO : GET /api/v1/oredrs/listsearch - 주문 검색 조회
     @PostMapping("/listsearch")
-    @Operation(summary = "주문 내역 검색 조회", description = "userId와 storeId로 주문 내역을 검색 후 페이징하여 조회합니다.")
+    @Operation(summary = "주문 내역 전체 조회", description = "로그인한 사용자의 권한에 따라 본인 주문 또는 내 가게 주문을 조회합니다.")
     public ResponseEntity<ApiResponse<Page<OrderResponseDto>>> selectOrdersSearch(
             @RequestBody OrderSearchRequestDto searchDto,
+            @AuthenticationPrincipal UserDetails userDetails,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Pageable validatedPageable = validatePageSize(pageable);
 
-        Page<OrderResponseDto> orderPage = orderService.selectOrdersSearch(searchDto, validatedPageable);
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
+        // 서비스에 사용자의 이름(username)과 권한 목록을 넘깁니다.
+        Page<OrderResponseDto> orderPage = orderService.selectOrders(
+                userDetails.getUsername(),
+                roles,
+                validatedPageable
+        );
+
         return ResponseEntity.ok(ApiResponse.success(orderPage));
     }
 
@@ -69,8 +94,9 @@ public class OrderController {
     @Operation(summary = "주문 생성", description = "결제 전 주문 정보를 DB에 먼저 저장하고 주문 ID를 반환합니다.")
     public ResponseEntity<ApiResponse<OrderResponseDto>> createOrder(
             @RequestBody OrderRequestDto orderRequestDto,
-            @RequestParam(value = "userId") String userId) {
+            @AuthenticationPrincipal UserDetails userDetail) {
 
+        String userId = userDetail.getUsername();
         OrderResponseDto response = orderService.insertOrder(userId, orderRequestDto);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -82,8 +108,9 @@ public class OrderController {
     @Operation(summary = "주문 취소", description = "주문 후 5분 이내인 경우에만 취소( CANCELLED )가 가능합니다.")
     public ResponseEntity<ApiResponse<OrderResponseDto>> deleteOrder(
             @PathVariable UUID orderId,
-            @RequestParam(value = "userId") String userId) {
+            @AuthenticationPrincipal UserDetails userDetail) {
 
+        String userId = userDetail.getUsername();
         OrderResponseDto response = orderService.deleteOrder(orderId, userId);
 
         return ResponseEntity.ok(ApiResponse.success("주문이 성공적으로 취소되었습니다.", response));
@@ -95,9 +122,18 @@ public class OrderController {
     public ResponseEntity<ApiResponse<OrderResponseDto>> updateOrderStatus(
             @PathVariable UUID orderId,
             @RequestParam(value = "status") Order.Status newStatus,
-            @RequestParam(value = "userId") String userId) {
+            @AuthenticationPrincipal UserDetails userDetail) {
 
-        OrderResponseDto response = orderService.updateOrderStatus(orderId, newStatus, userId);
+        List<String> roles = userDetail.getAuthorities().stream()
+                .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                .toList();
+
+        OrderResponseDto response = orderService.updateOrderStatus(
+                orderId,
+                newStatus,
+                userDetail.getUsername(),
+                roles
+        );
 
         return ResponseEntity.ok(ApiResponse.success("주문 상태가 " + newStatus + "(으)로 변경되었습니다.", response));
     }
