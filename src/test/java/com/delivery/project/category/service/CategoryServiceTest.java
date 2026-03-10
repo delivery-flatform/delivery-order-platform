@@ -58,6 +58,8 @@ class CategoryServiceTest {
 
         CategoryResponseDto result = categoryService.selectCategory(categoryId);
 
+        verify(categoryRepository).findById(categoryId);
+
         assertThat(result.getName()).isEqualTo("치킨");
     }
 
@@ -72,6 +74,8 @@ class CategoryServiceTest {
                 categoryService.selectCategory(categoryId))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(ErrorCode.CATEGORY_NOT_FOUND.getMessage());
+
+        verify(categoryRepository).findById(categoryId);
     }
 
     @Test
@@ -87,6 +91,8 @@ class CategoryServiceTest {
         Page<CategoryResponseDto> result =
                 categoryService.selectCategoryList(1,10,"createdAt",false);
 
+        verify(categoryRepository).findAllByDeletedAtIsNull(any(Pageable.class));
+
         assertThat(result.getContent().size()).isEqualTo(1);
     }
 
@@ -101,6 +107,8 @@ class CategoryServiceTest {
 
         Page<CategoryResponseDto> result =
                 categoryService.selectCategoryList(1, 999, "createdAt", false);
+
+        verify(categoryRepository).findAllByDeletedAtIsNull(any(Pageable.class));
 
         assertThat(result.getContent()).hasSize(1);
     }
@@ -133,6 +141,8 @@ class CategoryServiceTest {
         CategoryResponseDto result =
                 categoryService.insertCategory("admin", dto);
 
+        verify(categoryRepository).save(any(Category.class));
+
         assertThat(result.getName()).isEqualTo("치킨");
     }
 
@@ -149,6 +159,8 @@ class CategoryServiceTest {
         CategoryResponseDto result =
                 categoryService.updateCategory(categoryId, dto, "admin");
 
+        verify(categoryRepository).findById(categoryId);
+
         assertThat(result.getName()).isEqualTo("피자");
     }
 
@@ -160,6 +172,8 @@ class CategoryServiceTest {
                 .thenReturn(Optional.of(category));
 
         categoryService.deleteCategory(categoryId,"admin");
+
+        verify(categoryRepository).findById(categoryId);
 
         assertThat(category.getDeletedBy()).isEqualTo("admin");
         assertThat(category.getDeletedAt()).isNotNull();
