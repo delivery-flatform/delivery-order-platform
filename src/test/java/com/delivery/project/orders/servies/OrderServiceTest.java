@@ -1,4 +1,4 @@
-package com.delivery.project.orderservice;
+package com.delivery.project.orders.servies;
 
 import com.delivery.project.order.dto.request.OrderRequestDto;
 import com.delivery.project.order.dto.response.OrderResponseDto;
