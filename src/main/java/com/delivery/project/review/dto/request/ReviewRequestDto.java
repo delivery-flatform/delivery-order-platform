@@ -1,11 +1,13 @@
 package com.delivery.project.review.dto.request;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.UUID;
 
 @Getter
+@AllArgsConstructor
 public class ReviewRequestDto {
 
     @NotNull(message = "가게 번호는 필수입니다.")
