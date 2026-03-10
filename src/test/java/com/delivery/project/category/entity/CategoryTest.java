@@ -18,7 +18,7 @@ class CategoryTest {
     }
 
     @Test
-    @DisplayName("Category 생성 테스트")
+    @DisplayName("Category 생성")
     void createCategory() {
 
         CategoryRequestDto dto = new CategoryRequestDto("치킨");
@@ -32,29 +32,7 @@ class CategoryTest {
     }
 
     @Test
-    @DisplayName("Category 생성 시 활성 상태는 true")
-    void createCategoryIsActiveTrue() {
-
-        CategoryRequestDto dto = new CategoryRequestDto("피자");
-
-        Category category = Category.toEntity(dto, "admin");
-
-        assertThat(category.getIsActive()).isTrue();
-    }
-
-    @Test
-    @DisplayName("Category 생성 시 createdBy 저장")
-    void createCategoryCreatedBy() {
-
-        CategoryRequestDto dto = new CategoryRequestDto("분식");
-
-        Category category = Category.toEntity(dto, "manager");
-
-        assertThat(category.getCreatedBy()).isEqualTo("manager");
-    }
-
-    @Test
-    @DisplayName("Category 수정 테스트")
+    @DisplayName("Category 수정")
     void updateCategory() {
 
         Category category = createDefaultCategory();
@@ -70,33 +48,7 @@ class CategoryTest {
     }
 
     @Test
-    @DisplayName("Category 수정 시 updatedBy 저장")
-    void updateCategoryUpdatedBy() {
-
-        Category category = createDefaultCategory();
-
-        CategoryUpdateDto dto = new CategoryUpdateDto("한식", true);
-
-        category.updateCategory(dto, "master");
-
-        assertThat(category.getUpdatedBy()).isEqualTo("master");
-    }
-
-    @Test
-    @DisplayName("Category 수정 시 updatedAt 생성")
-    void updateCategoryUpdatedAt() {
-
-        Category category = createDefaultCategory();
-
-        CategoryUpdateDto dto = new CategoryUpdateDto("일식", true);
-
-        category.updateCategory(dto, "admin");
-
-        assertThat(category.getUpdatedAt()).isNotNull();
-    }
-
-    @Test
-    @DisplayName("Category 삭제 테스트")
+    @DisplayName("Category 삭제 (Soft Delete)")
     void deleteCategory() {
 
         Category category = createDefaultCategory();
@@ -105,27 +57,5 @@ class CategoryTest {
 
         assertThat(category.getDeletedBy()).isEqualTo("admin");
         assertThat(category.getDeletedAt()).isNotNull();
-    }
-
-    @Test
-    @DisplayName("Category 삭제 시 deletedAt 생성")
-    void deleteCategoryDeletedAt() {
-
-        Category category = createDefaultCategory();
-
-        category.deleteCategory("manager");
-
-        assertThat(category.getDeletedAt()).isNotNull();
-    }
-
-    @Test
-    @DisplayName("Category 삭제 시 deletedBy 저장")
-    void deleteCategoryDeletedBy() {
-
-        Category category = createDefaultCategory();
-
-        category.deleteCategory("master");
-
-        assertThat(category.getDeletedBy()).isEqualTo("master");
     }
 }
