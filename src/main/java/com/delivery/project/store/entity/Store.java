@@ -6,6 +6,7 @@ import com.delivery.project.store.dto.request.StoreUpdateRequestDto;
 import com.delivery.project.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -105,4 +106,5 @@ public class Store {
         this.updatedAt = LocalDateTime.now();
         this.updatedBy = username;
     }
+
 }
