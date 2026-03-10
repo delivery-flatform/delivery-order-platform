@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,44 +45,84 @@ public class OrderService {
     private PaymentService paymentService;
 
     // TODO: 주문 전체 조회
-    //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER','CUSTOMER')")
-    public Page<OrderResponseDto> selectOrders(String userId, String storeId, Pageable pageable) {
+    public Page<OrderResponseDto> selectOrders(String username, List<String> roles, Pageable pageable) {
         Page<Order> orderPage;
 
-        if (storeId != null && !storeId.isEmpty()) {
-            orderPage = orderRepository.findByStoreIdAndDeletedAtIsNull(UUID.fromString(storeId), pageable);
-        } else if (userId != null && !userId.isEmpty()) {
-            orderPage = orderRepository.findByCustomerUsernameAndDeletedAtIsNull(userId, pageable);
-        } else throw new IllegalArgumentException("조회를 위한 userId 또는 storeId가 필요합니다.");
+        if (roles.contains("ROLE_ADMIN")) {
+            // 관리자: 전체 주문 내역 조회
+            orderPage = orderRepository.findAllByDeletedAtIsNull(pageable);
+        } else if (roles.contains("ROLE_OWNER")) {
+            // 사장님: 본인이 소유한 가게의 주문 내역만 조회
+            Store store = storeRepository.findByUser_UsernameAndDeletedAtIsNull(username)
+                    .orElseThrow(() -> new IllegalArgumentException("해당 사장님의 가게를 찾을 수 없습니다."));
+
+            orderPage = orderRepository.findByStoreIdAndDeletedAtIsNull(store.getId(), pageable);
+        } else {
+            // 일반 고객: 본인이 주문한 내역만 조회
+            orderPage = orderRepository.findByCustomerUsernameAndDeletedAtIsNull(username, pageable);
+        }
 
         return orderPage.map(OrderResponseDto::from);
     }
 
     // TODO: 주문 검색 조회
-    //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER','CUSTOMER')")
-    public Page<OrderResponseDto> selectOrdersSearch(OrderSearchRequestDto dto, Pageable pageable) {
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER', 'CUSTOMER')")
+    public Page<OrderResponseDto> selectOrdersSearch(
+            OrderSearchRequestDto dto,
+            String username,
+            List<String> roles,
+            Pageable pageable) {
 
-        if (dto.getStoreId() != null) {
+        // 관리자(MASTER)인 경우: DTO에 담긴 정보 그대로 검색 허용
+        if (roles.contains("ROLE_MASTER")) {
+            return performSearch(dto, pageable);
+        }
+
+        // 사장님(OWNER, MANAGER)인 경우: 본인 가게의 검색만 허용
+        if (roles.contains("ROLE_OWNER") || roles.contains("ROLE_MANAGER")) {
+            Store store = storeRepository.findByUser_UsernameAndDeletedAtIsNull(username)
+                    .orElseThrow(() -> new IllegalArgumentException("가게 권한이 없습니다."));
+
+            // 사용자가 다른 storeId를 보냈더라도 본인 가게 ID로 강제 고정
             return orderRepository.searchByStoreIdWithFilters(
-                    dto.getStoreId(),
+                    store.getId(), // 인증된 사장님의 가게 ID
                     dto.getStatus(),
                     dto.getProductName(),
                     dto.getMinAmount(),
                     dto.getMaxAmount(),
                     pageable
+            ).map(OrderResponseDto::from);
+        }
+
+        // 일반 고객(CUSTOMER)인 경우: 본인 주문 검색만 허용
+        if (roles.contains("ROLE_CUSTOMER")) {
+            return orderRepository.searchByUserIdWithFilters(
+                    username, // 인증된 본인의 username으로 강제 고정
+                    dto.getStatus(),
+                    dto.getProductName(),
+                    dto.getMinAmount(),
+                    dto.getMaxAmount(),
+                    pageable
+            ).map(OrderResponseDto::from);
+        }
+
+        throw new IllegalArgumentException("검색 권한이 없습니다.");
+    }
+
+    // 중복 로직을 줄이기 위한 관리자용 헬퍼 메서드
+    private Page<OrderResponseDto> performSearch(OrderSearchRequestDto dto, Pageable pageable) {
+        if (dto.getStoreId() != null) {
+            return orderRepository.searchByStoreIdWithFilters(
+                    dto.getStoreId(), dto.getStatus(), dto.getProductName(),
+                    dto.getMinAmount(), dto.getMaxAmount(), pageable
             ).map(OrderResponseDto::from);
         } else if (dto.getCustomerUsername() != null) {
             return orderRepository.searchByUserIdWithFilters(
-                    dto.getCustomerUsername(),
-                    dto.getStatus(),
-                    dto.getProductName(),
-                    dto.getMinAmount(),
-                    dto.getMaxAmount(),
-                    pageable
+                    dto.getCustomerUsername(), dto.getStatus(), dto.getProductName(),
+                    dto.getMinAmount(), dto.getMaxAmount(), pageable
             ).map(OrderResponseDto::from);
-        } else {
-            throw new IllegalArgumentException("검색을 위해 상점 ID 또는 고객 ID가 필요합니다.");
         }
+        throw new IllegalArgumentException("검색을 위해 상점 ID 또는 고객 ID가 필요합니다.");
     }
 
     // TODO: 주문 단건 조회
@@ -96,7 +137,7 @@ public class OrderService {
 
     // TODO: 주문 생성 (이때는 @Transactional을 붙여야 함)
     @Transactional
-    //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'CUSTOMER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'CUSTOMER')")
     public OrderResponseDto insertOrder(String username, OrderRequestDto dto) {
         // 가게 이름으로 Store 엔티티 조회
         String storeName = dto.getStoreName();
@@ -136,7 +177,7 @@ public class OrderService {
                 .status(Order.Status.READY)
                 .deliveryAddress(dto.getAddress())
                 .requestNote(dto.getComment())
-                .orderType("ONLINE")
+                .orderType(Order.OrderType.ONLINE)
                 .createdAt(LocalDateTime.now())
                 .createdBy(username)
                 .build();
@@ -169,7 +210,7 @@ public class OrderService {
 
     // TODO: 주문 취소 (5분 이내 체크 로직 필요)
     @Transactional
-    //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'CUSTOMER','OWNER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'CUSTOMER','OWNER')")
     public OrderResponseDto deleteOrder(UUID orderId, String username) {
 
         // 주문 존재 여부 및 삭제 여부 확인
@@ -209,22 +250,26 @@ public class OrderService {
 
     // TODO: 주문 상태 변경 (OWNER or MANAGER+)
     @Transactional
-    //@PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'OWNER')")
-    public OrderResponseDto updateOrderStatus(UUID orderId, Order.Status newStatus, String username) {
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER','OWNER')")
+    public OrderResponseDto updateOrderStatus(UUID orderId, Order.Status newStatus, String username, List<String> roles) {
 
         // 주문 조회
         Order order = orderRepository.findByIdAndDeletedAtIsNull(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("상태를 변경할 주문을 찾을 수 없습니다. ID: " + orderId));
 
-        // 권한 검증
-        // 실제로는 토큰에서 권한을 가져오거나, DB에서 해당 상점의 주인인지 조회해야 함
-        /*
-        if (!order.getStoreOwnerUsername().equals(username)) {
-            throw new IllegalArgumentException("해당 상점의 주문 상태를 변경할 권한이 없습니다.");
-        }
-        */
+        // MASTER나 MANAGER 권한이 포함되어 있는지 확인
+        boolean isStaff = roles.contains("ROLE_MASTER") || roles.contains("ROLE_MANAGER");
 
-        // 엔티티 메서드 호출 (상태 변경)
+        if (!isStaff) {
+            // 사장님(OWNER)인 경우에만 본인 가게인지 확인
+            Store store = storeRepository.findByUser_UsernameAndDeletedAtIsNull(username)
+                    .orElseThrow(() -> new IllegalArgumentException("운영 중인 가게 정보를 찾을 수 없습니다: " + username));
+
+            if (!order.getStoreId().equals(store.getId())) {
+                throw new IllegalArgumentException("본인 가게의 주문만 상태를 변경할 수 있습니다.");
+            }
+        }
+
         order.updateStatus(newStatus, username);
 
         return OrderResponseDto.from(order);

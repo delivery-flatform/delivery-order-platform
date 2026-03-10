@@ -41,7 +41,7 @@ public class ReviewService {
     public Page<ReviewResponseDto> selectReview(UUID id, Pageable pageable, String search, User user) {
         //user의 name값과 store의 owner_user_name값 일치하는지 확인
         String ownerUsername = storeRepository.findById(id).orElseThrow(() ->
-                new CustomException(ErrorCode.STORE_NOT_FOUND)).getOwnerUsername();
+                new CustomException(ErrorCode.STORE_NOT_FOUND)).getName();
 
          if(!user.getUsername().equals(ownerUsername)){
              throw new CustomException(ErrorCode.FORBIDDEN);

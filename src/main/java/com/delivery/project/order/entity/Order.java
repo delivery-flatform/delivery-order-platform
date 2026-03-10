@@ -25,7 +25,6 @@ public class Order {
     @Schema(description = "주문 ID", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID id;
 
-    // TODO: 실제 프로젝트의 User, Product 엔티티 클래스로 타입을 변경하세요.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_username", referencedColumnName = "username", insertable = false, updatable = false)
     @Schema(description = "주문 고객 정보 (연관 관계)")
@@ -65,9 +64,10 @@ public class Order {
     @Schema(description = "고객 요청 사항", example = "문 앞에 두고 벨 눌러주세요.")
     private String requestNote;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "order_type", nullable = false, length = 20)
     @Schema(description = "주문 유형", example = "ONLINE")
-    private String orderType;
+    private OrderType orderType;
 
     @Column(name = "created_at", nullable = false)
     @Schema(description = "생성일시")
