@@ -126,7 +126,7 @@ public class OrderService {
     }
 
     // TODO: 주문 단건 조회
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER', 'CUSTOMER')")
+    //@PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER', 'CUSTOMER')")
     public OrderResponseDto selectOrder(UUID orderId) {
 
         Order order = orderRepository.findByIdAndDeletedAtIsNull(orderId)
