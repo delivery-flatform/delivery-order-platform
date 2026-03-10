@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Locale;
 import java.util.UUID;
 
 @Slf4j
@@ -88,7 +87,7 @@ public class ReviewService {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ReviewResponseDto createReview(ReviewRequestDto dto, User user) {
 
-       String status = "Completed".toUpperCase(Locale.ROOT);
+        Order.Status status = Order.Status.COMPLETED;
         // 주문 완료 상태인지 확인
        Order order = orderRepository.findByIdAndStatus(dto.getOrderId(), status).orElseThrow(()->
                new CustomException(ErrorCode.REVIEW_NOT_COMPLETED_ORDER)
@@ -150,8 +149,5 @@ public class ReviewService {
         review.deleteReview(user);
 
     }
-
-    // TODO : 리뷰 평점 계산 (QueryDSL ? JPQL?)
-
 
 }
