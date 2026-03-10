@@ -17,9 +17,12 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     /**
      * 고객 ID 기반 단순 목록 조회
      */
-    @Query("select o from Order o join fetch o.customer u join fetch o.product p " +
+    @Query("select o from Order o join fetch o.product p " +
             "where o.customerUsername = :customerUsername and o.deletedAt is null")
-    Page<Order> findByCustomerUsernameAndDeletedAtIsNull(@Param("customerUsername") String customerUsername, Pageable pageable);
+    Page<Order> findByCustomerUsernameAndDeletedAtIsNull(
+            @Param("customerUsername") String customerUsername,
+            Pageable pageable
+    );
 
     /**
      * 상점 ID 기반 단순 목록 조회
@@ -41,7 +44,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             "AND o.deletedAt IS NULL")
     Page<Order> searchByUserIdWithFilters(
             @Param("userId") String userId,
-            @Param("status") String status,
+            @Param("status") Order.Status status,
             @Param("productName") String productName,
             @Param("minPrice") Integer minPrice,
             @Param("maxPrice") Integer maxPrice,
@@ -61,7 +64,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             "AND o.deletedAt IS NULL")
     Page<Order> searchByStoreIdWithFilters(
             @Param("storeId") UUID storeId,
-            @Param("status") String status,
+            @Param("status") Order.Status status,
             @Param("productName") String productName,
             @Param("minPrice") Integer minPrice,
             @Param("maxPrice") Integer maxPrice,
