@@ -1,5 +1,9 @@
 package com.delivery.project.store.entity;
 
+import com.delivery.project.region.entity.Region;
+import com.delivery.project.store.dto.request.StoreRequestDto;
+import com.delivery.project.store.dto.request.StoreUpdateRequestDto;
+import com.delivery.project.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -19,11 +23,13 @@ public class Store {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "owner_username", nullable = false, length = 100)
-    private String ownerUsername;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_username", nullable = false)
+    private User user;
 
-    @Column(name = "region_id", nullable = false)
-    private UUID regionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "region_id", nullable = false)
+    private Region region;
 
     @Column(nullable = false, length = 255)
     private String name;
@@ -63,4 +69,40 @@ public class Store {
 
     @OneToMany(mappedBy = "store")
     private List<StoreCategory> storeCategoryList = new ArrayList<>();
+
+    public static Store create(User user, Region region, StoreRequestDto requestDto, String createdBy) {
+            return Store.builder()
+                    .user(user)
+                    .region(region)
+                    .name(requestDto.getStoreName())
+                    .description(requestDto.getDescription())
+                    .phone(requestDto.getPhone())
+                    .address(requestDto.getAddress())
+                    .minOrderPrice(requestDto.getMinOrderPrice())
+                    .isOpen(true)
+                    .createdAt(LocalDateTime.now())
+                    .createdBy(createdBy)
+                    .build();
+    }
+
+    public void delete(String username) {
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = username;
+    }
+
+    public void update(StoreUpdateRequestDto requestDto, String username) {
+        this.name = requestDto.getStoreName();
+        this.description = requestDto.getDescription();
+        this.phone = requestDto.getPhone();
+        this.address = requestDto.getAddress();
+        this.minOrderPrice = requestDto.getMinOrderPrice();
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = username;
+    }
+
+    public void updateStatus(boolean isOpen, String username) {
+        this.isOpen = isOpen;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = username;
+    }
 }
