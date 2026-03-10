@@ -20,6 +20,7 @@ public class PaymentConfirmRequestDto {
         return PaymentConfirmRequestDto.builder()
                 .PaymentKey(payment.getPaymentKey())
                 .orderId(String.valueOf(payment.getOrder().getId()))
+                .PaymentKey(payment.getPaymentKey())
                 .amount(payment.getAmount())
                 .build();
     }
