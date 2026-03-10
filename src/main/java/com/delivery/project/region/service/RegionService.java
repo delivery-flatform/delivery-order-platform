@@ -2,8 +2,8 @@ package com.delivery.project.region.service;
 
 import com.delivery.project.global.exception.CustomException;
 import com.delivery.project.global.exception.ErrorCode;
-import com.delivery.project.region.dto.RegionRequestDto;
-import com.delivery.project.region.dto.RegionResponseDto;
+import com.delivery.project.region.dto.request.RegionRequestDto;
+import com.delivery.project.region.dto.response.RegionResponseDto;
 import com.delivery.project.region.dto.request.RegionUpdateRequestDto;
 import com.delivery.project.region.entity.Region;
 import com.delivery.project.region.repository.RegionRepository;
