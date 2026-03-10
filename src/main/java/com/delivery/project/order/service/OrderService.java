@@ -222,7 +222,7 @@ public class OrderService {
 
         if (!isStaff) {
             // 사장님(OWNER)인 경우에만 본인 가게인지 확인
-            Store store = storeRepository.findByNameAndDeletedAtIsNull(username)
+            Store store = storeRepository.findByUserUsernameAndDeletedAtIsNull(username)
                     .orElseThrow(() -> new IllegalArgumentException("운영 중인 가게 정보를 찾을 수 없습니다: " + username));
 
             if (!order.getStoreId().equals(store.getId())) {

@@ -15,7 +15,7 @@ spring:
 # spring: 하위가 아닌 최상위 계층으로 이동
 gemini:
   api:
-    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
+    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
     key: "AIzaSyDwZX7rzDP5Zhg6KR9AQQPQjMfumUJ69co"
 
 jwt:

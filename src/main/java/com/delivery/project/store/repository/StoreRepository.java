@@ -15,6 +15,8 @@ public interface StoreRepository extends JpaRepository<Store, UUID> {
 
     Optional<Store> findByNameAndDeletedAtIsNull(String name);
 
+    Optional<Store> findByUserUsernameAndDeletedAtIsNull(String username);
+
     // 가게 목록 조회 + 리뷰 평균 평점
     @EntityGraph(attributePaths = {"region"})
     @Query("""
@@ -41,6 +43,4 @@ public interface StoreRepository extends JpaRepository<Store, UUID> {
         group by s
     """)
     Page<Object[]> searchStoreWithRating(@Param("keyword") String keyword, Pageable pageable);
-
-    Optional<Store> findByOwnerUsernameAndDeletedAtIsNull(String username);
 }
