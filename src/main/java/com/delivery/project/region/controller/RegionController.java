@@ -2,8 +2,8 @@ package com.delivery.project.region.controller;
 
 import com.delivery.project.global.response.ApiResponse;
 import com.delivery.project.global.security.UserDetailsImpl;
-import com.delivery.project.region.dto.RegionRequestDto;
-import com.delivery.project.region.dto.RegionResponseDto;
+import com.delivery.project.region.dto.request.RegionRequestDto;
+import com.delivery.project.region.dto.response.RegionResponseDto;
 import com.delivery.project.region.dto.request.RegionUpdateRequestDto;
 import com.delivery.project.region.service.RegionService;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.delivery.project.region.entity;
 
-import com.delivery.project.region.dto.RegionRequestDto;
+import com.delivery.project.region.dto.request.RegionRequestDto;
 import com.delivery.project.region.dto.request.RegionUpdateRequestDto;
 import com.delivery.project.store.entity.Store;
 import jakarta.persistence.*;

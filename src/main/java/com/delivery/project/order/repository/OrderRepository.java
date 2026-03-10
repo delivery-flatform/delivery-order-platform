@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
-    Optional<Order> findByIdAndStatus(UUID id, String status);
+    Optional<Order> findByIdAndStatus(UUID id, Order.Status status);
 
     /**
      * 고객 ID 기반 단순 목록 조회

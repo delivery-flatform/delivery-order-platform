@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Locale;
 import java.util.UUID;
 
 @Slf4j
@@ -40,10 +39,10 @@ public class ReviewService {
     @PreAuthorize("hasRole('OWNER')")
     public Page<ReviewResponseDto> selectReview(UUID id, Pageable pageable, String search, User user) {
         //user의 name값과 store의 owner_user_name값 일치하는지 확인
-        String ownerUsername = storeRepository.findById(id).orElseThrow(() ->
-                new CustomException(ErrorCode.STORE_NOT_FOUND)).getName();
+        Store store = storeRepository.findById(id).orElseThrow(() ->
+                new CustomException(ErrorCode.STORE_NOT_FOUND));
 
-         if(!user.getUsername().equals(ownerUsername)){
+         if(!user.getUsername().equals(store.getUser().getUsername())){
              throw new CustomException(ErrorCode.FORBIDDEN);
         }
 
@@ -88,14 +87,14 @@ public class ReviewService {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ReviewResponseDto createReview(ReviewRequestDto dto, User user) {
 
-       String status = "Completed".toUpperCase(Locale.ROOT);
+        Order.Status status = Order.Status.COMPLETED;
         // 주문 완료 상태인지 확인
        Order order = orderRepository.findByIdAndStatus(dto.getOrderId(), status).orElseThrow(()->
                new CustomException(ErrorCode.REVIEW_NOT_COMPLETED_ORDER)
         );
 
         // 가게 정보 확인
-       Store store = storeRepository.findById(dto.getStoreId()).orElseThrow(() ->
+       Store store = storeRepository.findById(order.getStoreId()).orElseThrow(() ->
                new CustomException(ErrorCode.STORE_NOT_FOUND)
        );
 
@@ -133,7 +132,10 @@ public class ReviewService {
         Review review = reviewRepository.findById(id).orElseThrow(() ->
                 new CustomException(ErrorCode.REVIEW_NOT_FOUND));
 
-        review.updateReview(dto.getContent(), dto.getRating(),user);
+        String content = dto.getContent() == null ? review.getContent() : dto.getContent();
+        short rating = dto.getRating() == 0 ? review.getRating() : dto.getRating();
+
+        review.updateReview(content, rating ,user);
 
         return ReviewUpdateResponseDto.from(review);
     }
@@ -150,8 +152,5 @@ public class ReviewService {
         review.deleteReview(user);
 
     }
-
-    // TODO : 리뷰 평점 계산 (QueryDSL ? JPQL?)
-
 
 }
