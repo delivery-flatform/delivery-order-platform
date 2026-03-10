@@ -1,8 +1,7 @@
-package com.delivery.project.category.domain;
+package com.delivery.project.category.entity;
 
 import com.delivery.project.category.dto.request.CategoryRequestDto;
 import com.delivery.project.category.dto.request.CategoryUpdateDto;
-import com.delivery.project.category.entity.Category;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
