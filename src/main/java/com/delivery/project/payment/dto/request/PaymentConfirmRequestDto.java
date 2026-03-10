@@ -4,14 +4,9 @@ import com.delivery.project.payment.entity.Payment;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Getter
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,10 +18,8 @@ public class PaymentConfirmRequestDto {
 
     public static PaymentConfirmRequestDto from(Payment payment) {
         return PaymentConfirmRequestDto.builder()
-                .PaymentKey(payment.getPaymentMethod().name())
+                .PaymentKey(payment.getPaymentKey())
                 .orderId(String.valueOf(payment.getOrder().getId()))
-                .PaymentKey(payment.getPaymentMethod())
-                .orderId(String.valueOf(payment.getOrderId()))
                 .amount(payment.getAmount())
                 .build();
     }

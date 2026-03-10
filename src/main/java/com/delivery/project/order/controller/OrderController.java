@@ -17,7 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -95,9 +97,14 @@ public class OrderController {
     public ResponseEntity<ApiResponse<OrderResponseDto>> updateOrderStatus(
             @PathVariable UUID orderId,
             @RequestParam(value = "status") Order.Status newStatus,
-            @RequestParam(value = "userId") String userId) {
+            @RequestParam(value = "userId") String userId,
+            org.springframework.security.core.Authentication authentication) {
 
-        OrderResponseDto response = orderService.updateOrderStatus(orderId, newStatus, userId);
+        List<String> roles = authentication.getAuthorities().stream()
+                .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        OrderResponseDto response = orderService.updateOrderStatus(orderId, newStatus, userId, roles);
 
         return ResponseEntity.ok(ApiResponse.success("주문 상태가 " + newStatus + "(으)로 변경되었습니다.", response));
     }
