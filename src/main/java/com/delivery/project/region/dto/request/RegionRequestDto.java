@@ -1,4 +1,4 @@
-package com.delivery.project.region.dto;
+package com.delivery.project.region.dto.request;
 
 import lombok.Builder;
 import lombok.Getter;
