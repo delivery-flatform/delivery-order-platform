@@ -113,7 +113,6 @@ public class PaymentService {
 
             // 결제 실패 저장
             Payment payment = Payment.builder()
-                    .order(order)
                     .paymentMethod(String.valueOf(Payment.PaymentMethod.CARD))
                     .paymentKey(dto.getPaymentKey())
                     .amount(dto.getAmount())

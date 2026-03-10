@@ -15,7 +15,7 @@ public interface StoreRepository extends JpaRepository<Store, UUID> {
 
     Optional<Store> findByNameAndDeletedAtIsNull(String name);
 
-    Optional<Store> findByUserUsernameAndDeletedAtIsNull(String username);
+    Optional<Store> findByUser_UsernameAndDeletedAtIsNull(String username);
 
     // 가게 목록 조회 + 리뷰 평균 평점
     @EntityGraph(attributePaths = {"region"})
