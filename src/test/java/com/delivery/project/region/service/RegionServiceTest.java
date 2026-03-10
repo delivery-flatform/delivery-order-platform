@@ -93,10 +93,8 @@ class RegionServiceTest {
     @DisplayName("지역 목록 조회 성공")
     void selectRegionList() {
 
-        Pageable pageable = PageRequest.of(0,10);
-
         Page<Region> page =
-                new PageImpl<>(List.of(region));
+                new PageImpl<>(List.of(region), PageRequest.of(0,10), 1);
 
         when(regionRepository.findAllByIsActiveTrueAndDeletedAtIsNull(any(Pageable.class)))
                 .thenReturn(page);
