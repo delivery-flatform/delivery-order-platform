@@ -35,7 +35,7 @@
 - Docker / Docker Compose
 
 ## ERD
-<img width="2210" height="1322" alt="delivery (1)" src="https://github.com/user-attachments/assets/500134ce-21cf-4a41-a6a9-31c91e937564" />
+<img width="2210" height="1322" alt="Copy of delivery" src="https://github.com/user-attachments/assets/270d631a-ca89-4723-9a57-64c21c29a40b" />
 
 ## 프로젝트 구조
 
