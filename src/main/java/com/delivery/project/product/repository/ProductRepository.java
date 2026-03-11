@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, UUID> {
+
     List<Product> findByStoreIdAndDeletedAtIsNull(UUID storeId);
 
     @Query("SELECT p FROM Product p WHERE p.name IN :productNames AND p.deletedAt IS NULL")

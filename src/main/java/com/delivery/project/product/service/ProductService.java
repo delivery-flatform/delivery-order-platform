@@ -1,5 +1,7 @@
 package com.delivery.project.product.service;
 
+import com.delivery.project.global.exception.CustomException;
+import com.delivery.project.global.exception.ErrorCode;
 import com.delivery.project.product.dto.request.ProductCreateRequest;
 import com.delivery.project.product.dto.request.ProductUpdateRequest;
 import com.delivery.project.product.dto.response.ProductResponse;
@@ -31,9 +33,10 @@ public class ProductService {
 
     // TODO: 상품 목록 조회
     // TODO: 상품 단건 조회
-    // TODO: 상품 등록 (OWNER+)
-    // TODO: 상품 수정 (OWNER 본인 or MANAGER+)
+    // TODO: 상품 등록
+    // TODO: 상품 수정
     // TODO: 상품 숨김 처리
+    // TODO: 상품 숨김 해제
     // TODO: 상품 삭제 Soft Delete
 
     // TODO: 상품 목록 조회
@@ -56,22 +59,22 @@ public class ProductService {
     @Transactional(readOnly = true)
     public ProductResponse getProduct(UUID productId, boolean isAdmin) {
 
-        Product product = productRepository
-                .findByIdAndDeletedAtIsNull(productId)
-                .orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다."));
+        Product product = getActiveProduct(productId);
 
         if (!isAdmin && product.getIsHidden()) {
-            throw new RuntimeException("숨김 처리된 상품입니다.");
+            throw new CustomException(ErrorCode.PRODUCT_HIDDEN);
         }
 
         return ProductResponse.from(product);
     }
 
-    // 1. 상품 등록
+    // TODO: 상품 등록
     public UUID createProduct(ProductCreateRequest request, String userName) {
 
         Store store = storeRepository.findById(request.getStoreId())
-                .orElseThrow(() -> new RuntimeException("가게가 존재하지 않습니다."));
+                .orElseThrow(() -> {
+                    return new CustomException(ErrorCode.STORE_NOT_FOUND);
+                });
 
         Product product = Product.create(
                 store,
@@ -86,7 +89,7 @@ public class ProductService {
         return product.getId();
     }
 
-    // 2. 상품 수정
+    // TODO: 상품 수정
     public void updateProduct(UUID productId, ProductUpdateRequest request, String userName) {
 
         Product product = getActiveProduct(productId);
@@ -99,7 +102,7 @@ public class ProductService {
         );
     }
 
-    // 3. 상품 삭제 (Soft Delete)
+    // TODO: 상품 삭제 Soft Delete
     public void deleteProduct(UUID productId, String userName) {
 
         Product product = getActiveProduct(productId);
@@ -107,7 +110,7 @@ public class ProductService {
         product.delete(userName);
     }
 
-    // 4. 상품 숨김 처리
+    // TODO: 상품 숨김 처리
     public void hideProduct(UUID productId, String userName) {
 
         Product product = getActiveProduct(productId);
@@ -115,7 +118,7 @@ public class ProductService {
         product.hide(userName);
     }
 
-    // 5. 상품 숨김 해제
+    // TODO: 상품 숨김 해제
     public void unhideProduct(UUID productId, String userName) {
 
         Product product = getActiveProduct(productId);
@@ -125,6 +128,9 @@ public class ProductService {
 
     private Product getActiveProduct(UUID productId) {
         return productRepository.findByIdAndDeletedAtIsNull(productId)
-                .orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다."));
+                .orElseThrow(() ->{
+        return new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
+    });
+
     }
 }

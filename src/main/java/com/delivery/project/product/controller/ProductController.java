@@ -1,5 +1,6 @@
 package com.delivery.project.product.controller;
 
+import com.delivery.project.global.response.ApiResponse;
 import com.delivery.project.product.dto.request.ProductCreateRequest;
 import com.delivery.project.product.dto.request.ProductUpdateRequest;
 import com.delivery.project.product.dto.response.ProductResponse;
@@ -34,7 +35,7 @@ public class ProductController {
 
     // TODO: GET    /api/v1/products          - 상품 목록 조회
     @GetMapping
-    public ResponseEntity<Page<ProductResponse>> getProducts(
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProducts(
             @PageableDefault(
                     size = 10,
                     page = 0,
@@ -65,12 +66,12 @@ public class ProductController {
         Page<ProductResponse> products =
                 productService.getProducts(validatedPageable, isAdmin);
 
-        return ResponseEntity.ok(products);
+        return ResponseEntity.ok(ApiResponse.success(products));
     }
 
     // TODO: GET    /api/v1/products/{id}     - 상품 단건 조회
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductResponse> getProduct(
+    public ResponseEntity<ApiResponse<ProductResponse>> getProduct(
             @PathVariable UUID productId,
             Authentication authentication) {
 
@@ -84,25 +85,27 @@ public class ProductController {
         ProductResponse product =
                 productService.getProduct(productId, isAdmin);
 
-        return ResponseEntity.ok(product);
+        return ResponseEntity.ok(ApiResponse.success("조회가 완료되었습니다.", product));
+
     }
 
     // TODO: POST   /api/v1/products          - 상품 등록
+    @PreAuthorize("hasAnyRole('OWNER')")
     @PostMapping
-    public ResponseEntity<UUID> createProduct(
+    public ResponseEntity<ApiResponse<UUID>> createProduct(
             @RequestBody ProductCreateRequest request,
             Authentication authentication) {
 
         String username = authentication.getName();
 
         UUID productId = productService.createProduct(request, username);
-        return ResponseEntity.ok(productId);
+        return ResponseEntity.ok(ApiResponse.success(productId));
     }
 
     // TODO: PUT    /api/v1/products/{id}     - 상품 수정
     @PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'OWNER')")
     @PutMapping("/{productId}")
-    public ResponseEntity<Void> updateProduct(
+    public ResponseEntity<ApiResponse<Void>> updateProduct(
             @PathVariable UUID productId,
             @RequestBody ProductUpdateRequest request,
             Authentication authentication) {
@@ -110,45 +113,45 @@ public class ProductController {
         String username = authentication.getName();
 
         productService.updateProduct(productId, request, username);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("상품 수정 완료", null));
     }
 
     // TODO: DELETE /api/v1/products/{id}     - 상품 삭제
     @PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'OWNER')")
     @DeleteMapping("/{productId}")
-    public ResponseEntity<Void> deleteProduct(
+    public ResponseEntity<ApiResponse<Void>> deleteProduct(
             @PathVariable UUID productId,
             Authentication authentication) {
 
         String username = authentication.getName();
 
         productService.deleteProduct(productId, username);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("상품 삭제 완료", null));
     }
 
     // TODO: PATCH  /api/v1/products/{id}/hide - 상품 숨김
     @PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'OWNER')")
     @PatchMapping("/{productId}/hide")
-    public ResponseEntity<Void> hideProduct(
+    public ResponseEntity<ApiResponse<Void>> hieProduct(
             @PathVariable UUID productId,
             Authentication authentication) {
 
         String username = authentication.getName();
 
         productService.hideProduct(productId, username);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("상품 숨김 완료.", null));
     }
 
     // TODO: PATCH  /api/v1/products/{id}/hide - 상품 숨김
     @PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'OWNER')")
     @PatchMapping("/{productId}/unhide")
-    public ResponseEntity<Void> unhideProduct(
+    public ResponseEntity<ApiResponse<Void>> unhideProduct(
             @PathVariable UUID productId,
             Authentication authentication) {
 
         String username = authentication.getName();
 
         productService.unhideProduct(productId, username);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("상품 숨김 해제.", null));
     }
 }
