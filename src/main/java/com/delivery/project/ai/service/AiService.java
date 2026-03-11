@@ -1,28 +1,15 @@
 package com.delivery.project.ai.service;
 
-import com.delivery.project.ai.repository.AiLogRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
+import com.delivery.project.ai.dto.request.AiRequestDto;
+import com.delivery.project.ai.dto.response.AiResponseDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-@Slf4j
-@Service
-@RequiredArgsConstructor
-@Transactional(readOnly = true)
-public class AiService {
+public interface AiService {
 
-    private final AiLogRepository aiLogRepository;
-    private final WebClient webClient;
+    Page<AiResponseDto> aiSelect(Pageable pageable, String search);
 
-    @Value("${gemini.api.key}")
-    private String geminiApiKey;
+    String aiInsert(AiRequestDto dto, String username);
 
-    @Value("${gemini.api.url}")
-    private String geminiApiUrl;
 
-    // TODO: 상품 설명 생성 (50자 이하 제한)
-    // TODO: AI 로그 조회
 }

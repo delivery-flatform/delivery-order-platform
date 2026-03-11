@@ -35,12 +35,14 @@ public enum ErrorCode {
     // Review
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "리뷰를 찾을 수 없습니다."),
     REVIEW_NOT_COMPLETED_ORDER(HttpStatus.BAD_REQUEST, "완료된 주문에만 리뷰를 작성할 수 있습니다."),
+    DUPLICATE_REVIEW(HttpStatus.BAD_REQUEST, "이미 해당 주문에 대한 리뷰를 작성하셨습니다."),
 
     // Region
     REGION_NOT_FOUND(HttpStatus.NOT_FOUND, "지역을 찾을 수 없습니다."),
+    REGION_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "이미 삭제된 지역입니다."),
 
     // Category
-    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다.");
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다."), CATEGORY_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "이미 삭제된 카테고리입니다.");
 
     private final HttpStatus status;
     private final String message;
