@@ -1,11 +1,25 @@
 spring:
-  profiles:
-    active: local
+  datasource:
+    url: jdbc:mysql://54.252.56.23:3306/delivery_db?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    username: root
+    password: O90o90o90!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
 server:
   port: 8080
 
-logging:
-  level:
-    com.delivery.project: DEBUG
-    org.hibernate.SQL: DEBUG
+gemini:
+  api:
+    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
+    key: AIzaSyCMNR0vyc6vff6rt2d9CF28mz6mKjuQXv0
+
+jwt:
+  secret: my-local-secret-key-1234567890abcdefgh
+  expiration: 86400000

@@ -24,4 +24,11 @@ public class StoreCategory {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
+
+    public static StoreCategory create(Store store, Category category) {
+        return StoreCategory.builder()
+                .store(store)
+                .category(category)
+                .build();
+    }
 }

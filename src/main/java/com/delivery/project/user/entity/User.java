@@ -1,8 +1,11 @@
 package com.delivery.project.user.entity;
 
+import com.delivery.project.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Entity
@@ -50,6 +53,9 @@ public class User {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
+    @OneToMany(mappedBy = "user")
+    private List<Store> storeList = new ArrayList<>();
 
     public void update(String nickname, String encodedPassword, String email, Boolean isPublic, String updatedBy) {
         Optional.ofNullable(nickname).ifPresent(v -> this.nickname = v);

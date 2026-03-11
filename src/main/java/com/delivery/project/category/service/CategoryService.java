@@ -1,8 +1,8 @@
 package com.delivery.project.category.service;
 
-import com.delivery.project.category.dto.CategoryRequestDto;
-import com.delivery.project.category.dto.CategoryResponseDto;
-import com.delivery.project.category.dto.CategoryUpdateDto;
+import com.delivery.project.category.dto.request.CategoryRequestDto;
+import com.delivery.project.category.dto.response.CategoryResponseDto;
+import com.delivery.project.category.dto.request.CategoryUpdateDto;
 import com.delivery.project.category.entity.Category;
 import com.delivery.project.category.repository.CategoryRepository;
 import com.delivery.project.global.exception.CustomException;
@@ -17,7 +17,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,8 +31,6 @@ public class CategoryService {
     private static final List<String> ALLOWED_SORTS = List.of("createdAt", "name");
 
     // 카테고리 목록 조회
-//    @PreAuthorize("hasAnyRole('CUSTOMER', 'OWNER', 'MANAGER', 'MASTER')")
-    @Transactional(readOnly = true)
     public Page<CategoryResponseDto> selectCategoryList(int page, int size, String sortBy, boolean isAsc) {
         if (!ALLOWED_SORTS.contains(sortBy)) {
             sortBy = "createdAt";
@@ -45,56 +42,74 @@ public class CategoryService {
         Sort.Direction direction = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
         Sort sort = Sort.by(direction, sortBy);
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page - 1, size, sort);
+
         Page<Category> categoryPage = categoryRepository.findAllByDeletedAtIsNull(pageable);
+
+        log.info("카테고리 목록 조회 완료 totalElements={}", categoryPage.getTotalElements());
 
         return categoryPage.map(CategoryResponseDto::from);
     }
 
     // 카테고리 단건 조회 (MANAGER+)
-//    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
-    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     public CategoryResponseDto selectCategory(UUID id) {
-        Category category = this.findCategory(id);
+        Category category = findActiveCategory(id);
+
+        log.info("카테고리 단건 조회 완료 categoryId={}, categoryName={}", id, category.getName());
 
         return CategoryResponseDto.from(category);
     }
 
-    // 카테고리 등록 (MANAGER+
-//    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    // 카테고리 등록 (MANAGER+)
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
-    public void insertCategory(CategoryRequestDto requestDto) {
-        // TODO: MANAGER 권한 이상만 추가 가능
-        Category category = Category.builder()
-                .name(requestDto.getName())
-                .isActive(true)
-                .createdAt(LocalDateTime.now())
-                .createdBy("MANAGER")
-                .build();
+    public CategoryResponseDto insertCategory(String username, CategoryRequestDto requestDto) {
+        Category category = Category.toEntity(requestDto, username);
+        Category savedCategory = categoryRepository.save(category);
 
-        categoryRepository.save(category);
+        log.info("카테고리 등록 완료 categoryId={}, username={}", savedCategory.getId(), username);
+
+        return CategoryResponseDto.from(savedCategory);
     }
 
     // 카테고리 수정 (MANAGER+)
-//    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
-    public void updateCategory(UUID id, CategoryUpdateDto requestDto) {
-        Category category = this.findCategory(id);
+    public CategoryResponseDto updateCategory(UUID id, CategoryUpdateDto requestDto, String username) {
+        Category category = findActiveCategory(id);
+        category.updateCategory(requestDto, username);
 
-        // TODO: updatedBy 추가
-        category.updateCategory(requestDto);
+        log.info("카테고리 수정 완료 categoryId={}, username={}", id, username);
+        return CategoryResponseDto.from(category);
     }
 
     // 카테고리 삭제 Soft Delete (MANAGER+)
-//    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @Transactional
-    public void deleteCategory(UUID id) {
+    public void deleteCategory(UUID id, String username) {
         Category category = this.findCategory(id);
+        category.deleteCategory(username);
 
-        category.deleteCategory("MANAGER"); // username 넣기
+        log.info("카테고리 삭제 완료 categoryId={}, username={}", id, username);
     }
 
     private Category findCategory(UUID id) {
-        return categoryRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+        return categoryRepository.findById(id).orElseThrow(() -> {
+            log.warn("카테고리 조회 실패 categoryId={}", id);
+
+            return new CustomException(ErrorCode.CATEGORY_NOT_FOUND);
+        });
+    }
+
+    private Category findActiveCategory(UUID id) {
+        Category category = findCategory(id);
+
+        if (category.getDeletedAt() != null) {
+            log.warn("삭제된 카테고리 접근 시도 categoryId={}", id);
+            throw new CustomException(ErrorCode.CATEGORY_ALREADY_DELETED);
+        }
+
+        return category;
     }
 }

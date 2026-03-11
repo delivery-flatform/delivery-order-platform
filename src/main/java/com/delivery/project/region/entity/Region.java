@@ -1,8 +1,13 @@
 package com.delivery.project.region.entity;
 
+import com.delivery.project.region.dto.request.RegionRequestDto;
+import com.delivery.project.region.dto.request.RegionUpdateRequestDto;
+import com.delivery.project.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -46,4 +51,46 @@ public class Region {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
+    @OneToMany(mappedBy = "region")
+    private List<Store> stores = new ArrayList<>();
+
+    public static Region toEntity(RegionRequestDto requestDto, String username) {
+        return Region.builder()
+                .name(requestDto.getName())
+                .city(requestDto.getCity())
+                .district(requestDto.getDistrict())
+                .isActive(true)
+                .createdAt(LocalDateTime.now())
+                .createdBy(username)
+                .build();
+    }
+
+    public void updateRegion(String username, RegionUpdateRequestDto requestDto) {
+        if (requestDto.getName() != null && !requestDto.getName().isBlank()) {
+            this.name = requestDto.getName();
+        }
+
+        if (requestDto.getCity() != null && !requestDto.getCity().isBlank()) {
+            this.city = requestDto.getCity();
+        }
+
+        if (requestDto.getDistrict() != null && !requestDto.getDistrict().isBlank()) {
+            this.district = requestDto.getDistrict();
+        }
+
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = username;
+    }
+
+    public void updateStatus(String username, boolean isActive) {
+        this.isActive = isActive;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = username;
+    }
+
+    public void deleteRegion(String username) {
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = username;
+    }
 }

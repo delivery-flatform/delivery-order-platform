@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <script src="https://js.tosspayments.com/v2/standard"></script>
+    <style>
+        .container {
+            max-width: 500px;
+            margin: 30px auto;
+            padding: 25px;
+            border: 1px solid #e5e8eb;
+            border-radius: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #191f28;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            color: #4e5968;
+            margin-bottom: 4px;
+            margin-top: 12px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d6db;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #8b95a1;
+            margin-bottom: 8px;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 20px;
+        }
+
+        #payment-button {
+            background-color: #3182f6;
+            color: white;
+        }
+
+        #payment-button:hover {
+            background-color: #1b64da;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>배달 주문 결제</h2>
+
+    <label for="userId">고객 이름</label>
+    <input type="text" id="userId" value="맹시훈 맹시훈">
+
+    <label for="storeName">가게 이름</label>
+    <input type="text" id="storeName" value="콩나물국밥">
+
+    <label for="product_names">상품 및 수량 선택</label>
+    <p class="info-text">예: 돼지고기 김치찌개:1, 계란말이:2 (쉼표 구분)</p>
+    <input type="text" id="product_names" value="콩나물국밥:2">
+
+    <button id="payment-button">주문 생성 및 결제하기</button>
+</div>
+
+<script>
+    const clientKey = "test_ck_LkKEypNArWdY7WDaQRoQ8lmeaxYG";
+    const tossPayments = TossPayments(clientKey);
+
+    document.getElementById("payment-button").addEventListener("click", async () => {
+        // 로그인 토큰 확인 (localStorage에 저장되어 있다고 가정)
+        const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiLrp7nsi5ztm4gg66e57Iuc7ZuIIiwicm9sZSI6IkNVU1RPTUVSIiwiaWF0IjoxNzczMTEzNDg5LCJleHAiOjE3NzMxOTk4ODl9.bPWcQSdzAAu_3KoHVbWvP05WG9b-6wCXOudkb-0UT7o";
+
+        const storeName = document.getElementById("storeName").value;
+        const productNameInput = document.getElementById("product_names").value;
+
+        if (!storeName) return alert("가게 이름을 입력해주세요.");
+
+        // 상품 파싱
+        const parsedItems = productNameInput.split(',').map(item => {
+            const [name, quantity] = item.split(':').map(s => s.trim());
+            return {name: name, quantity: parseInt(quantity) || 1};
+        });
+
+        const orderRequestDto = {
+            storeName: storeName,
+            address: "서울시 강남구 역삼동 101",
+            comment: "문 앞에 두고 벨 눌러주세요.",
+            productNameList: parsedItems.map(item => item.name),
+            products: parsedItems.map(item => ({
+                productId: null,
+                quantity: item.quantity
+            }))
+        };
+
+        try {
+            // 백엔드 호출 (Authorization 헤더 추가)
+            const preOrderResponse = await fetch(`/api/v1/orders/order`, { // userId 쿼리 스트링 제거
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` // JWT 토큰 전달
+                },
+                body: JSON.stringify(orderRequestDto)
+            });
+
+            const result = await preOrderResponse.json();
+            if (!preOrderResponse.ok) throw new Error(result.message || "주문 생성 실패");
+
+            const {orderId, totalPrice} = result.data;
+            const orderName = parsedItems.length > 1
+                ? `${parsedItems[0].name} 외 ${parsedItems.length - 1}건`
+                : parsedItems[0].name;
+
+            const payment = tossPayments.payment({
+                customerKey: "user_" + Math.random().toString(36).substring(2, 10),
+            });
+
+            // 토스 결제 요청
+            await payment.requestPayment({
+                method: "CARD",
+                amount: {currency: "KRW", value: totalPrice},
+                orderId: orderId,
+                orderName: orderName,
+                successUrl: `${window.location.origin}/payment/success.html`,
+                failUrl: `${window.location.origin}/payment/fail.html`
+            });
+
+        } catch (error) {
+            alert("에러 발생: " + error.message);
+        }
+    });
+</script>
+</body>
+</html>
