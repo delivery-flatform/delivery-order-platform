@@ -1,23 +1,15 @@
 package com.delivery.project.product.repository;
 
-import com.delivery.project.product.dto.response.ProductResponse;
 import com.delivery.project.product.entity.Product;
-import com.delivery.project.product.service.ProductService;
 import com.delivery.project.store.entity.Store;
 import com.delivery.project.store.repository.StoreRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @DataJpaTest
 class ProductRepositoryTest {
@@ -27,9 +19,6 @@ class ProductRepositoryTest {
 
     @Autowired
     StoreRepository storeRepository;
-
-    @Autowired
-    ProductService productService;
 
     @Test
     void saveProduct() {
@@ -105,31 +94,4 @@ class ProductRepositoryTest {
         assertThat(result.getTotalElements()).isEqualTo(1);
     }
 
-    @Test
-    void selectProductList() {
-
-        Pageable pageable = PageRequest.of(0, 10);
-
-        Store store = mock(Store.class);
-
-        Product product = Product.create(
-                store,
-                "치킨",
-                "설명",
-                20000,
-                "admin"
-        );
-
-        Page<Product> page =
-                new PageImpl<>(List.of(product));
-
-        when(productRepository
-                .findByDeletedAtIsNullAndIsHiddenFalse(pageable))
-                .thenReturn(page);
-
-        Page<ProductResponse> result =
-                productService.getProducts(pageable, false);
-
-        assertThat(result.getTotalElements()).isEqualTo(1);
-    }
 }
