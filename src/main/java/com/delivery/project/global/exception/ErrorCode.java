@@ -24,7 +24,7 @@ public enum ErrorCode {
 
     // Product
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다."),
-
+    PRODUCT_HIDDEN(HttpStatus.BAD_REQUEST, "숨김 처리된 상품입니다."),
     // Order
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
     ORDER_CANCEL_TIMEOUT(HttpStatus.BAD_REQUEST, "주문 취소는 주문 후 5분 이내에만 가능합니다."),
