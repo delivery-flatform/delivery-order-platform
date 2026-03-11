@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>CORS 테스트</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: #f5f5f5;
+        }
+        h2 { color: #333; }
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+        button:hover { background: #357abd; }
+        .result {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            min-height: 40px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+        .success { background: #e6f4ea; border-color: #81c784; color: #2e7d32; }
+        .error   { background: #fdecea; border-color: #e57373; color: #c62828; }
+        .info    { background: #e3f2fd; border-color: #64b5f6; color: #1565c0; }
+        small { color: #888; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<h2>🌐 CORS 테스트</h2>
+<small>브라우저에서 직접 API를 호출해 CORS 차단 여부를 확인합니다.</small>
+
+<!-- 서버 주소 설정 -->
+<div class="section">
+    <label>서버 주소</label>
+    <input type="text" id="baseUrl" value="http://54.252.56.23:8080" placeholder="http://서버IP:포트" />
+</div>
+
+<!-- 1. 회원가입 -->
+<div class="section">
+    <h3 style="margin-top:0">① 회원가입 <small>— Authorization 헤더 없음</small></h3>
+    <label>username</label>
+    <input type="text" id="signupUsername" value="corstest1" />
+    <label>password</label>
+    <input type="text" id="signupPassword" value="Test1234!" />
+    <label>email</label>
+    <input type="text" id="signupEmail" value="corstest1@example.com" />
+    <button onclick="testSignup()">회원가입 요청</button>
+    <div id="result-signup" class="result info">결과가 여기에 표시됩니다.</div>
+</div>
+
+<!-- 2. 로그인 -->
+<div class="section">
+    <h3 style="margin-top:0">② 로그인 <small>— 토큰 발급</small></h3>
+    <label>username</label>
+    <input type="text" id="loginUsername" value="corstest1" />
+    <label>password</label>
+    <input type="text" id="loginPassword" value="Test1234!" />
+    <button onclick="testLogin()">로그인 요청</button>
+    <div id="result-login" class="result info">결과가 여기에 표시됩니다.</div>
+</div>
+
+<!-- 3. 인증 필요 API -->
+<div class="section">
+    <h3 style="margin-top:0">③ 내 정보 조회 <small>— Authorization 헤더 포함</small></h3>
+    <label>username</label>
+    <input type="text" id="getUsername" value="corstest1" />
+    <label>JWT Token <small>(로그인 버튼 클릭 시 자동 입력)</small></label>
+    <input type="text" id="jwtToken" placeholder="로그인 버튼 클릭 시 자동 입력됩니다" />
+    <button onclick="testGetUser()">회원 조회 요청</button>
+    <div id="result-get" class="result info">결과가 여기에 표시됩니다.</div>
+</div>
+
+<script>
+    function getBaseUrl() {
+        return document.getElementById('baseUrl').value.replace(/\/$/, '');
+    }
+
+    function showResult(id, data, isError) {
+        const el = document.getElementById(id);
+        el.className = 'result ' + (isError ? 'error' : 'success');
+        el.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+    }
+
+    async function testSignup() {
+        const url = getBaseUrl() + '/api/v1/auth/signup';
+        const body = {
+            username: document.getElementById('signupUsername').value,
+            password: document.getElementById('signupPassword').value,
+            nickname: 'cors테스트',
+            email: document.getElementById('signupEmail').value,
+            isPublic: true
+        };
+        showResult('result-signup', '요청 중...', false);
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            showResult('result-signup', { status: res.status, body: data }, !res.ok);
+        } catch (e) {
+            showResult('result-signup', '❌ CORS 차단 또는 네트워크 오류\n' + e.message, true);
+        }
+    }
+
+    async function testLogin() {
+        const url = getBaseUrl() + '/api/v1/auth/login';
+        const body = {
+            username: document.getElementById('loginUsername').value,
+            password: document.getElementById('loginPassword').value
+        };
+        showResult('result-login', '요청 중...', false);
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (res.ok && data.data?.token) {
+                document.getElementById('jwtToken').value = data.data.token;
+                document.getElementById('getUsername').value = body.username;
+            }
+            showResult('result-login', { status: res.status, body: data }, !res.ok);
+        } catch (e) {
+            showResult('result-login', '❌ CORS 차단 또는 네트워크 오류\n' + e.message, true);
+        }
+    }
+
+    async function testGetUser() {
+        const username = document.getElementById('getUsername').value;
+        const token = document.getElementById('jwtToken').value;
+        const url = getBaseUrl() + '/api/v1/users/' + username;
+        showResult('result-get', '요청 중...', false);
+        try {
+            const res = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+            const data = await res.json();
+            showResult('result-get', { status: res.status, body: data }, !res.ok);
+        } catch (e) {
+            showResult('result-get', '❌ CORS 차단 또는 네트워크 오류\n' + e.message, true);
+        }
+    }
+</script>
+
+</body>
+</html>
