@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -57,7 +56,7 @@ public class OrderController {
 
     // TODO : GET /api/v1/oredrs/listsearch - 주문 검색 조회
     @PostMapping("/listsearch")
-    @Operation(summary = "주문 내역 전체 조회", description = "로그인한 사용자의 권한에 따라 본인 주문 또는 내 가게 주문을 조회합니다.")
+    @Operation(summary = "주문 검색 조회", description = "로그인한 사용자의 권한에 따라 본인 주문 또는 내 가게 주문을 조회합니다.")
     public ResponseEntity<ApiResponse<Page<OrderResponseDto>>> selectOrdersSearch(
             @RequestBody OrderSearchRequestDto searchDto,
             @AuthenticationPrincipal UserDetails userDetails,
@@ -70,7 +69,8 @@ public class OrderController {
                 .toList();
 
         // 서비스에 사용자의 이름(username)과 권한 목록을 넘깁니다.
-        Page<OrderResponseDto> orderPage = orderService.selectOrders(
+        Page<OrderResponseDto> orderPage = orderService.selectOrdersSearch(
+                searchDto,
                 userDetails.getUsername(),
                 roles,
                 validatedPageable
