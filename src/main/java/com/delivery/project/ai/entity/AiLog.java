@@ -17,7 +17,6 @@ public class AiLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "`key`")
     private UUID id;
 
     @Column(name = "target_type", nullable = false, length = 30)
