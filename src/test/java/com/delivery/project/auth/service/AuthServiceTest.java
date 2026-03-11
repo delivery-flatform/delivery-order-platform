@@ -28,6 +28,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import org.mockito.ArgumentCaptor;
+
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
@@ -86,6 +88,42 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.signup(request))
                 .isInstanceOf(CustomException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.DUPLICATE_EMAIL);
+    }
+
+    @Test
+    @DisplayName("회원가입 성공 - MANAGER 역할로 가입")
+    void signup_success_managerRole() {
+        // given
+        SignupRequestDto request = createSignupRequest("manager1", "manager@example.com");
+        ReflectionTestUtils.setField(request, "role", UserRole.MANAGER);
+
+        given(userRepository.existsByUsername("manager1")).willReturn(false);
+        given(userRepository.existsByEmail("manager@example.com")).willReturn(false);
+        given(passwordEncoder.encode(anyString())).willReturn("encodedPw");
+
+        // when
+        authService.signup(request);
+
+        // then
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("회원가입 성공 - isPublic false로 가입")
+    void signup_success_privateProfile() {
+        // given
+        SignupRequestDto request = createSignupRequest("user2", "user2@example.com");
+        ReflectionTestUtils.setField(request, "isPublic", false);
+
+        given(userRepository.existsByUsername("user2")).willReturn(false);
+        given(userRepository.existsByEmail("user2@example.com")).willReturn(false);
+        given(passwordEncoder.encode(anyString())).willReturn("encodedPw");
+
+        // when
+        authService.signup(request);
+
+        // then
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
@@ -158,6 +196,25 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("로그인 성공 - MANAGER 역할 토큰 발급")
+    void login_success_managerRole() {
+        // given
+        LoginRequestDto request = createLoginRequest("manager1", "Test1234!");
+        User user = createUser("manager1", "encodedPw", UserRole.MANAGER);
+
+        given(userRepository.findByUsernameAndDeletedAtIsNull("manager1")).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("Test1234!", "encodedPw")).willReturn(true);
+        given(jwtUtil.generateToken("manager1", "MANAGER")).willReturn("manager-token");
+
+        // when
+        LoginResponseDto response = authService.login(request);
+
+        // then
+        assertThat(response.getRole()).isEqualTo("MANAGER");
+        assertThat(response.getToken()).isEqualTo("manager-token");
+    }
+
+    @Test
     @DisplayName("로그인 실패 - 삭제된 유저")
     void login_fail_deletedUser() {
         // given
@@ -168,6 +225,44 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(CustomException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("회원가입 시 createdBy가 username으로 설정됨")
+    void signup_createdBy_isUsername() {
+        // given
+        SignupRequestDto request = createSignupRequest("user1", "test@example.com");
+        given(userRepository.existsByUsername("user1")).willReturn(false);
+        given(userRepository.existsByEmail("test@example.com")).willReturn(false);
+        given(passwordEncoder.encode(anyString())).willReturn("encodedPw");
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+
+        // when
+        authService.signup(request);
+
+        // then
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getCreatedBy()).isEqualTo("user1");
+    }
+
+    @Test
+    @DisplayName("로그인 시 유저 role로 토큰 생성 요청됨")
+    void login_tokenGeneratedWithCorrectRole() {
+        // given
+        LoginRequestDto request = createLoginRequest("user1", "Test1234!");
+        User user = createUser("user1", "encodedPw", UserRole.OWNER);
+
+        given(userRepository.findByUsernameAndDeletedAtIsNull("user1")).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("Test1234!", "encodedPw")).willReturn(true);
+        given(jwtUtil.generateToken("user1", "OWNER")).willReturn("owner-token");
+
+        // when
+        LoginResponseDto response = authService.login(request);
+
+        // then
+        verify(jwtUtil).generateToken("user1", "OWNER");
+        assertThat(response.getRole()).isEqualTo("OWNER");
     }
 
     // ===== 헬퍼 메서드 =====

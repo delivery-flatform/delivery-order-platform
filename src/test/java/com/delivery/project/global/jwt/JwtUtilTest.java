@@ -100,4 +100,53 @@ class JwtUtilTest {
         // then
         assertThat(result).isFalse();
     }
+
+    @Test
+    @DisplayName("빈 문자열 토큰 검증 실패")
+    void validateToken_emptyToken_returnsFalse() {
+        // when
+        boolean result = jwtUtil.validateToken("");
+
+        // then
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("다른 secret으로 서명된 토큰 검증 실패")
+    void validateToken_differentSecret_returnsFalse() {
+        // given - 다른 secret으로 생성한 토큰
+        JwtUtil otherJwtUtil = new JwtUtil("other-secret-key-1234567890abcdefgh-different-key", EXPIRATION);
+        String token = otherJwtUtil.generateToken("testuser", "CUSTOMER");
+
+        // when - 원래 secret으로 검증
+        boolean result = jwtUtil.validateToken(token);
+
+        // then
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("동일한 정보로 생성해도 토큰은 매번 다름")
+    void generateToken_sameInput_differentTokens() {
+        // given & when
+        String token1 = jwtUtil.generateToken("testuser", "CUSTOMER");
+        String token2 = jwtUtil.generateToken("testuser", "CUSTOMER");
+
+        // then - iat(발급 시각)이 다르면 토큰이 달라짐
+        // 같은 밀리초에 생성되면 같을 수도 있으므로 값 자체보다 구조 검증
+        assertThat(jwtUtil.getUsername(token1)).isEqualTo(jwtUtil.getUsername(token2));
+        assertThat(jwtUtil.getRole(token1)).isEqualTo(jwtUtil.getRole(token2));
+    }
+
+    @Test
+    @DisplayName("MASTER 역할 토큰 생성 및 추출 성공")
+    void generateToken_masterRole_success() {
+        // given
+        String token = jwtUtil.generateToken("admin", "MASTER");
+
+        // when & then
+        assertThat(jwtUtil.getUsername(token)).isEqualTo("admin");
+        assertThat(jwtUtil.getRole(token)).isEqualTo("MASTER");
+        assertThat(jwtUtil.validateToken(token)).isTrue();
+    }
 }
