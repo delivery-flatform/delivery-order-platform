@@ -48,7 +48,7 @@ public class OrderService {
     public Page<OrderResponseDto> selectOrders(String username, List<String> roles, Pageable pageable) {
         Page<Order> orderPage;
 
-        if (roles.contains("ROLE_ADMIN")) {
+        if (roles.contains("ROLE_ADMIN") || roles.contains("ROLE_MANAGER")) {
             // 관리자: 전체 주문 내역 조회
             orderPage = orderRepository.findAllByDeletedAtIsNull(pageable);
         } else if (roles.contains("ROLE_OWNER")) {
@@ -74,12 +74,12 @@ public class OrderService {
             Pageable pageable) {
 
         // 관리자(MASTER)인 경우: DTO에 담긴 정보 그대로 검색 허용
-        if (roles.contains("ROLE_MASTER")) {
+        if (roles.contains("ROLE_ADMIN") || roles.contains("ROLE_MANAGER")) {
             return performSearch(dto, pageable);
         }
 
         // 사장님(OWNER, MANAGER)인 경우: 본인 가게의 검색만 허용
-        if (roles.contains("ROLE_OWNER") || roles.contains("ROLE_MANAGER")) {
+        if (roles.contains("ROLE_OWNER")) {
             Store store = storeRepository.findByUser_UsernameAndDeletedAtIsNull(username)
                     .orElseThrow(() -> new IllegalArgumentException("가게 권한이 없습니다."));
 
