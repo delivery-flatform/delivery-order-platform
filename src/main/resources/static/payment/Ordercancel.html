@@ -2,10 +2,11 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>주문 취소 API 테스트</title>
+    <title>주문 취소 API 테스트 (인증 포함)</title>
     <style>
+        /* 기존 스타일 유지 및 토큰 필드 스타일 추가 */
         .test-container {
-            width: 400px;
+            width: 450px;
             margin: 50px auto;
             padding: 25px;
             border-radius: 15px;
@@ -38,10 +39,15 @@
             box-sizing: border-box;
         }
 
+        .token-field {
+            border: 2px solid #3182f6;
+        }
+
+        /* 토큰 입력창 강조 */
         button {
             width: 100%;
             padding: 15px;
-            background: #3182f6; /* 토스 블루 스타일 */
+            background: #3182f6;
             color: white;
             border: none;
             border-radius: 8px;
@@ -72,8 +78,13 @@
     <h2>주문 취소 테스트</h2>
 
     <div class="input-group">
+        <label style="font-weight: bold; color: #3182f6;">인증 토큰 (JWT)</label>
+        <input type="text" id="tokenInput" class="token-field" placeholder="Apidog에서 복사한 토큰을 붙여넣으세요">
+    </div>
+
+    <div class="input-group">
         <label>주문 ID (orderId)</label>
-        <input type="text" id="orderIdInput" placeholder="UUID를 입력하세요">
+        <input type="text" id="orderIdInput" placeholder="주문 UUID를 입력하세요">
     </div>
 
     <div class="input-group">
@@ -88,43 +99,51 @@
 
 <script>
     document.getElementById('submitBtn').addEventListener('click', async () => {
-        const orderId = document.getElementById('orderIdInput').value;
-        const userId = document.getElementById('userIdInput').value;
+        const token = document.getElementById('tokenInput').value.trim();
+        const orderId = document.getElementById('orderIdInput').value.trim();
+        const userId = document.getElementById('userIdInput').value.trim();
         const logBox = document.getElementById('result-log');
 
-        if (!orderId || !userId) {
-            alert("모든 값을 입력해주세요.");
+        // 토큰 포함 모든 필드 검증
+        if (!token || !orderId || !userId) {
+            alert("토큰과 모든 입력 값을 확인해주세요.");
             return;
         }
 
-        // 로딩 표시
         logBox.style.display = "block";
-        logBox.innerText = "취소 처리 중...";
+        logBox.innerText = "취소 요청 중...";
         logBox.style.color = "#333";
 
         try {
-            // 주소값 구성: @PatchMapping("/{orderId}/cancel") + @RequestParam userId
+            // API 경로 구성
             const targetUrl = `/api/v1/orders/${orderId}/cancel?userId=${encodeURIComponent(userId)}`;
 
             const response = await fetch(targetUrl, {
-                method: "PATCH", // 컨트롤러의 @PatchMapping과 일치
+                method: "PATCH",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    // [핵심] Authorization 헤더에 토큰 추가
+                    "Authorization": `Bearer ${token}`
                 }
             });
 
+            // 401 에러(인증 실패) 처리
+            if (response.status === 401) {
+                throw new Error("인증에 실패했습니다. 토큰이 유효한지 확인하세요.");
+            }
+
             const result = await response.json();
 
-            if (response.ok && (result.success === true || result.status === "SUCCESS" || !result.error)) {
+            if (response.ok) {
                 logBox.style.color = "#007aff";
-                logBox.innerText = `[성공]\n${result.message}\n결과 데이터: ${JSON.stringify(result.data, null, 2)}`;
+                logBox.innerText = `[성공]\n메시지: ${result.message}\n데이터: ${JSON.stringify(result.data, null, 2)}`;
             } else {
                 logBox.style.color = "#ff3b30";
-                logBox.innerText = `[실패]\n사유: ${result.message || "서버 에러 발생"}`;
+                logBox.innerText = `[실패]\n상태코드: ${response.status}\n사유: ${result.message || "취소 불가"}`;
             }
         } catch (error) {
             logBox.style.color = "#ff3b30";
-            logBox.innerText = `[통신 에러]\n${error.message}`;
+            logBox.innerText = `[에러 발생]\n${error.message}`;
         }
     });
 </script>

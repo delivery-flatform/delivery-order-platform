@@ -18,7 +18,7 @@ server:
 gemini:
   api:
     url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
-    key: "AIzaSyDwZX7rzDP5Zhg6KR9AQQPQjMfumUJ69co"
+    key: AIzaSyCMNR0vyc6vff6rt2d9CF28mz6mKjuQXv0
 
 jwt:
   secret: my-local-secret-key-1234567890abcdefgh

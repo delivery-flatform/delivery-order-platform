@@ -10,3 +10,13 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+
+
+gemini:
+  api:
+    url: gemini-url
+    key: gemini-key
+
+jwt:
+  secret: jwt-secret-jwt-secret-jwt-secret
+  expiration: 000000

@@ -4,6 +4,7 @@
     <meta charset="utf-8"/>
     <script src="https://js.tosspayments.com/v2/standard"></script>
     <style>
+        /* 기존 스타일과 동일 */
         .container {
             max-width: 500px;
             margin: 30px auto;
@@ -79,6 +80,9 @@
     <p class="info-text">예: 돼지고기 김치찌개:1, 계란말이:2 (쉼표 구분)</p>
     <input type="text" id="product_names" value="콩나물국밥:2">
 
+    <label for="token">인증 토큰 (Apidog에서 복사한 Bearer 토큰 값)</label>
+    <input type="text" id="token" placeholder="eyJhbGciOiJIUzI1NiJ9...">
+
     <button id="payment-button">주문 생성 및 결제하기</button>
 </div>
 
@@ -87,15 +91,17 @@
     const tossPayments = TossPayments(clientKey);
 
     document.getElementById("payment-button").addEventListener("click", async () => {
-        // 로그인 토큰 확인 (localStorage에 저장되어 있다고 가정)
-        const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiLrp7nsi5ztm4gg66e57Iuc7ZuIIiwicm9sZSI6IkNVU1RPTUVSIiwiaWF0IjoxNzczMTEzNDg5LCJleHAiOjE3NzMxOTk4ODl9.bPWcQSdzAAu_3KoHVbWvP05WG9b-6wCXOudkb-0UT7o";
+        const token = document.getElementById("token").value.trim();
+
+        if (!token) {
+            return alert("Apidog에서 발급받은 인증 토큰을 입력해주세요.");
+        }
 
         const storeName = document.getElementById("storeName").value;
         const productNameInput = document.getElementById("product_names").value;
 
         if (!storeName) return alert("가게 이름을 입력해주세요.");
 
-        // 상품 파싱
         const parsedItems = productNameInput.split(',').map(item => {
             const [name, quantity] = item.split(':').map(s => s.trim());
             return {name: name, quantity: parseInt(quantity) || 1};
@@ -113,12 +119,13 @@
         };
 
         try {
-            // 백엔드 호출 (Authorization 헤더 추가)
-            const preOrderResponse = await fetch(`/api/v1/orders/order`, { // userId 쿼리 스트링 제거
+            // 주문 생성 API 호출
+            const preOrderResponse = await fetch(`/api/v1/orders/order`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // JWT 토큰 전달
+                    // 사용자가 입력한 토큰을 헤더에 실어서 보냅니다.
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(orderRequestDto)
             });
@@ -135,7 +142,7 @@
                 customerKey: "user_" + Math.random().toString(36).substring(2, 10),
             });
 
-            // 토스 결제 요청
+            // 토스 결제 창 띄우기
             await payment.requestPayment({
                 method: "CARD",
                 amount: {currency: "KRW", value: totalPrice},
@@ -146,6 +153,7 @@
             });
 
         } catch (error) {
+            console.error(error);
             alert("에러 발생: " + error.message);
         }
     });

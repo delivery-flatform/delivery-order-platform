@@ -86,7 +86,7 @@ public class OrderService {
             // 사용자가 다른 storeId를 보냈더라도 본인 가게 ID로 강제 고정
             return orderRepository.searchByStoreIdWithFilters(
                     store.getId(), // 인증된 사장님의 가게 ID
-                    dto.getStatus(),
+                    Order.Status.valueOf(dto.getStatus()),
                     dto.getProductName(),
                     dto.getMinAmount(),
                     dto.getMaxAmount(),
@@ -98,7 +98,7 @@ public class OrderService {
         if (roles.contains("ROLE_CUSTOMER")) {
             return orderRepository.searchByUserIdWithFilters(
                     username, // 인증된 본인의 username으로 강제 고정
-                    dto.getStatus(),
+                    Order.Status.valueOf(dto.getStatus()),
                     dto.getProductName(),
                     dto.getMinAmount(),
                     dto.getMaxAmount(),
@@ -113,12 +113,12 @@ public class OrderService {
     private Page<OrderResponseDto> performSearch(OrderSearchRequestDto dto, Pageable pageable) {
         if (dto.getStoreId() != null) {
             return orderRepository.searchByStoreIdWithFilters(
-                    dto.getStoreId(), dto.getStatus(), dto.getProductName(),
+                    dto.getStoreId(), Order.Status.valueOf(dto.getStatus()), dto.getProductName(),
                     dto.getMinAmount(), dto.getMaxAmount(), pageable
             ).map(OrderResponseDto::from);
         } else if (dto.getCustomerUsername() != null) {
             return orderRepository.searchByUserIdWithFilters(
-                    dto.getCustomerUsername(), dto.getStatus(), dto.getProductName(),
+                    dto.getCustomerUsername(), Order.Status.valueOf(dto.getStatus()), dto.getProductName(),
                     dto.getMinAmount(), dto.getMaxAmount(), pageable
             ).map(OrderResponseDto::from);
         }

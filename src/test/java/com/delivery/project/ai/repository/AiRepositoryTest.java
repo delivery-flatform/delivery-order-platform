@@ -15,7 +15,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,7 +40,6 @@ class AiRepositoryTest {
     void aiSave_Test(){
 
         AiLog aiLog = AiLog.builder()
-                .id(UUID.randomUUID())
                 .targetType(TargetTypeEnum.PRODUCT_DESCRIPTION)
                 .prompt("치킨 메뉴 설명 해줘.")
                 .response("바삭바삭한 치킨입니다.")
