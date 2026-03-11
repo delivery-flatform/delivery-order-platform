@@ -37,6 +37,10 @@
 ## ERD
 <img width="2210" height="1322" alt="Copy of delivery" src="https://github.com/user-attachments/assets/270d631a-ca89-4723-9a57-64c21c29a40b" />
 
+## Architecture
+<img width="660" height="695" alt="image" src="https://github.com/user-attachments/assets/fbfe22df-8506-444d-b6ff-4f5c90aa7b05" />
+
+
 ## 프로젝트 구조
 
 ```
