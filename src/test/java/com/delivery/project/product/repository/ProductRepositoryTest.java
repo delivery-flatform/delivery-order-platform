@@ -93,5 +93,5 @@ class ProductRepositoryTest {
 
         assertThat(result.getTotalElements()).isEqualTo(1);
     }
-    
+
 }
