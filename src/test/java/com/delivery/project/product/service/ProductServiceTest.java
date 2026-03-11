@@ -1,6 +1,7 @@
 package com.delivery.project.product.service;
 
 import com.delivery.project.product.dto.request.ProductCreateRequest;
+import com.delivery.project.product.dto.response.ProductResponse;
 import com.delivery.project.product.entity.Product;
 import com.delivery.project.product.repository.ProductRepository;
 import com.delivery.project.store.entity.Store;
@@ -10,7 +11,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -82,6 +88,34 @@ class ProductServiceTest {
         productService.hideProduct(productId, "admin");
 
         assertThat(product.getIsHidden()).isTrue();
+    }
+
+    @Test
+    void selectProductList() {
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Store store = mock(Store.class);
+
+        Product product = Product.create(
+                store,
+                "치킨",
+                "설명",
+                20000,
+                "admin"
+        );
+
+        Page<Product> page =
+                new PageImpl<>(List.of(product));
+
+        when(productRepository
+                .findByDeletedAtIsNullAndIsHiddenFalse(pageable))
+                .thenReturn(page);
+
+        Page<ProductResponse> result =
+                productService.getProducts(pageable, false);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
     }
 }
 
