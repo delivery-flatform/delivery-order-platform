@@ -12,6 +12,8 @@ RUN gradle bootJar -x test --no-daemon
 FROM amazoncorretto:17-al2023-headless
 WORKDIR /app
 
+COPY .env .env
+
 # 빌드 결과물 복사
 COPY --from=builder /app/build/libs/*.jar app.jar
 

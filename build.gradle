@@ -53,6 +53,8 @@ dependencies {
 	testImplementation 'com.h2database:h2' // test 코드 작성 위한 가짜 db
 	// Swagger
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
+
+	implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 }
 
 tasks.named('test') {
