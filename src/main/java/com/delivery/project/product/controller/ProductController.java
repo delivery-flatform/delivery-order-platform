@@ -12,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -90,7 +89,6 @@ public class ProductController {
     }
 
     // TODO: POST   /api/v1/products          - 상품 등록
-    @PreAuthorize("hasAnyRole('OWNER')")
     @PostMapping
     public ResponseEntity<ApiResponse<UUID>> createProduct(
             @RequestBody ProductCreateRequest request,
@@ -103,7 +101,6 @@ public class ProductController {
     }
 
     // TODO: PUT    /api/v1/products/{id}     - 상품 수정
-    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'OWNER')")
     @PutMapping("/{productId}")
     public ResponseEntity<ApiResponse<Void>> updateProduct(
             @PathVariable UUID productId,
@@ -117,7 +114,6 @@ public class ProductController {
     }
 
     // TODO: DELETE /api/v1/products/{id}     - 상품 삭제
-    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'OWNER')")
     @DeleteMapping("/{productId}")
     public ResponseEntity<ApiResponse<Void>> deleteProduct(
             @PathVariable UUID productId,
@@ -130,7 +126,6 @@ public class ProductController {
     }
 
     // TODO: PATCH  /api/v1/products/{id}/hide - 상품 숨김
-    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'OWNER')")
     @PatchMapping("/{productId}/hide")
     public ResponseEntity<ApiResponse<Void>> hieProduct(
             @PathVariable UUID productId,
@@ -143,7 +138,6 @@ public class ProductController {
     }
 
     // TODO: PATCH  /api/v1/products/{id}/hide - 상품 숨김
-    @PreAuthorize("hasAnyRole('MANAGER', 'MASTER', 'OWNER')")
     @PatchMapping("/{productId}/unhide")
     public ResponseEntity<ApiResponse<Void>> unhideProduct(
             @PathVariable UUID productId,
