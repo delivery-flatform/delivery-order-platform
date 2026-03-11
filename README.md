@@ -67,13 +67,6 @@ src/main/java/com/delivery/project/
 │   ├── repository/
 │   └── service/
 │
-├── delivery/                  # 배달 주소
-│   ├── controller/
-│   ├── entity/
-│   ├── dto/
-│   ├── repository/
-│   └── service/
-│
 ├── order/                     # 주문
 │   ├── controller/
 │   ├── entity/
