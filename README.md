@@ -122,6 +122,9 @@ src/main/java/com/delivery/project/
     └── response/              # 공통 응답 형식
 ```
 
+## Swagger
+http://54.252.56.23:8080/swagger-ui/index.html
+
 ## 실행 방법
 
 **로컬 실행**
