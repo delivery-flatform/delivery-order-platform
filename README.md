@@ -38,9 +38,7 @@
 <img width="2210" height="1322" alt="Copy of delivery" src="https://github.com/user-attachments/assets/270d631a-ca89-4723-9a57-64c21c29a40b" />
 
 ## Architecture
-
-<img width="616" height="646" alt="인프라 설계서 drawio" src="https://github.com/user-attachments/assets/79cb66ee-39e6-45ea-95dd-2c7a378a290d" />
-
+<img width="705" height="662" alt="인프라 설계서" src="https://github.com/user-attachments/assets/aefdefd1-182b-48ff-908a-231651462f78" />
 
 ## 프로젝트 구조
 
